@@ -1,0 +1,21 @@
+{
+  "name": "pentest-reference-search",
+  "version": "3.0.0",
+  "description": "Optimized indexed search for pentest reference sites with fuzzy search and advanced scoring",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "index": "node indexer.js build",
+    "search": "node indexer.js search",
+    "info": "node indexer.js info"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "axios": "^1.6.0",
+    "cors": "^2.8.5",
+    "cheerio": "^1.0.0-rc.12"
+  },
+  "keywords": ["pentest", "security", "search", "indexer"],
+  "author": "",
+  "license": "MIT"
+}

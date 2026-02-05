@@ -1,0 +1,110 @@
+{
+  "sources": [
+    {
+      "id": "pentest-everything",
+      "name": "PenTest Everything",
+      "type": "gitbook",
+      "search_url": "https://viperone.gitbook.io/pentest-everything/?q={query}",
+      "index_url": "https://viperone.gitbook.io/pentest-everything",
+      "enabled": true,
+      "description": "Comprehensive pentest knowledge base"
+    },
+    {
+      "id": "hackviser-pentesting",
+      "name": "HackViser - Pentesting Tactics",
+      "type": "gitbook",
+      "index_url": "https://hackviser.com/tactics/pentesting",
+      "search_url": "https://hackviser.com/tactics/pentesting?q={query}",
+      "enabled": true,
+      "description": "Pentesting tactics and techniques"
+    },
+    {
+      "id": "hackviser-tools",
+      "name": "HackViser - Security Tools",
+      "type": "gitbook",
+      "index_url": "https://hackviser.com/tactics/tools",
+      "search_url": "https://hackviser.com/tactics/tools?q={query}",
+      "enabled": true,
+      "description": "Security tools and usage guides"
+    },
+    {
+      "id": "hackviser-hardening",
+      "name": "HackViser - Hardening",
+      "type": "gitbook",
+      "index_url": "https://hackviser.com/tactics/hardening",
+      "search_url": "https://hackviser.com/tactics/hardening?q={query}",
+      "enabled": true,
+      "description": "System hardening guides"
+    },
+    {
+      "id": "oscp-notes",
+      "name": "OSCP Notes 2025",
+      "type": "gitbook",
+      "index_url": "https://oscp-notes-2025.gitbook.io/oscp+-notes-2025/",
+      "search_url": "https://oscp-notes-2025.gitbook.io/oscp+-notes-2025?q={query}",
+      "enabled": true,
+      "description": "OSCP certification study notes"
+    },
+    {
+      "id": "rowbot-pentest",
+      "name": "OffsecNewbie Guide",
+      "type": "gitbook",
+      "index_url": "https://guide.offsecnewbie.com/",
+      "search_url": "https://guide.offsecnewbie.com/?q={query}",
+      "enabled": true,
+      "description": "Offensive security beginner guide"
+    },
+    {
+      "id": "verylazy",
+      "name": "VeryLazyTech Notes",
+      "type": "gitbook",
+      "index_url": "https://www.verylazytech.com/",
+      "search_url": "https://www.verylazytech.com/?q={query}",
+      "enabled": true,
+      "description": "Pentesting notes and guides"
+    },
+    {
+      "id": "hacktricks-clone",
+      "name": "HackTricks Clone - 1nf1n1ty",
+      "type": "gitbook",
+      "index_url": "https://blog.1nf1n1ty.team/hacktricks",
+      "search_url": "https://blog.1nf1n1ty.team/hacktricks?q={query}",
+      "enabled": true,
+      "description": "Hacking tricks and techniques"
+    },
+    {
+      "id": "pentest-book",
+      "name": "Pentest Book",
+      "type": "gitbook",
+      "index_url": "https://pentestbook.six2dez.com/",
+      "search_url": "https://pentestbook.six2dez.com/?q={query}",
+      "enabled": true,
+      "description": "Comprehensive pentesting methodology"
+    },
+    {
+      "id": "hacktricks",
+      "name": "HackTricks",
+      "type": "gitbook",
+      "index_url": "https://book.hacktricks.xyz/",
+      "search_url": "https://book.hacktricks.xyz/?q={query}",
+      "enabled": true,
+      "description": "Hacking tricks and techniques"
+    },
+    {
+      "id": "exploit-notes",
+      "name": "Exploit Notes",
+      "type": "gitbook",
+      "index_url": "https://exploit-notes.hdks.org",
+      "search_url": "https://exploit-notes.hdks.org?q={query}",
+      "enabled": true,
+      "description": "Exploit development and security research"
+    }
+  ],
+  "index_settings": {
+    "auto_refresh": false,
+    "refresh_interval_hours": 24,
+    "max_pages_per_source": 50,
+    "timeout_seconds": 15,
+    "retry_attempts": 2
+  }
+}   
