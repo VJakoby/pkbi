@@ -1,4 +1,4 @@
-# 🔍 Pentest Reference Search (PRS)
+# 🔍 Pentesting Reference Search (PRS)
 
 A **fast, local search engine for pentesting reference material**.  
 Designed for offline use with fuzzy search, smart relevance ranking, and a modern web UI.
