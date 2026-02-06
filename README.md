@@ -1,18 +1,16 @@
 # 🔍 Pentesting Reference Search (PRS)
 
-A **fast, local search engine for pentesting reference material**.  
-Designed for offline use with fuzzy search, smart relevance ranking, and a modern web UI.
-
+- A **fast, local search engine for pentesting reference material**.  
+- Designed for offline use with fuzzy search, smart relevance ranking, and a modern web UI.
 ---
 
 ## ✨ Key-Features
 
-- 🎯 Improved search algorithm with multi-level scoring
+- Fast index and search
+- 🎯 Search algorithm with multi-level scoring
+- ℹ️ Uses online (GitBook) sources or local sources (.MD files)
 - 📚 Source overview on the homepage
-- 🏷️ Better titles (page title + URL-derived page name)
 - 💬 Snippet previews showing keyword context
-- ⚡ ~5× faster indexing via parallel crawling
-- 🎨 Fully redesigned modern UI
 - 🔍 Fuzzy search for misspellings
 
 
@@ -66,17 +64,48 @@ This ensures that **authoritative, topic-focused pages rank higher than generic 
 
 ---
 
-## ➕ Adding New Sources
+## ➕ Sources
 
 All searchable content is defined in `sources.json`.
-Either online sources or offline sources(primarily .md markdown files focused)
+Either online sources(primarily gitbooks) or offline sources(primarily .md markdown files)
 
 ### Steps
 
 1. Open `sources.json`
 2. Add a new online/offline source object
+```json
+{
+  "online_sources": [
+    {
+      "id": "source-1",
+      "name": "Source",
+      "type": "gitbook",
+      "search_url": "https://example.gitbook.io/example/?q={query}",
+      "index_url": "https://example.gitbook.io/example",
+      "enabled": true,
+      "description": "Description of Example Site"
+    },
+    ....
+    ....
+],
+  "offline_sources": [
+    {
+      "id": "local-notes",
+      "name": "Offline Notes",
+      "type": "local",
+      "path": "/path/to/offline-notes",
+      "file_extensions": [
+        ".md"
+      ],
+      "enabled": true,
+      "description": "Local notes"
+    }
+  ]
+}
+```
+
 3. Run the indexer
-5. Restart the server
+4. Restart the server
 
 ---
 
