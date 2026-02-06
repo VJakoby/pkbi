@@ -139,6 +139,7 @@ class ContentIndexer {
                     source_name: source.name,
                     url: fileUrl,
                     file_path: filePath,  // Store actual file path for preview
+                    display_path: pageName,
                     title: title,
                     page_name: pageName,
                     content: content.toLowerCase(),
@@ -486,39 +487,56 @@ class ContentIndexer {
             // 5. INNEHÅLLS-MATCH
             const occurrences = (contentLower.match(new RegExp(searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi')) || []).length;
             if (occurrences > 0) {
-                score += occurrences * 2;
+                score += Math.min(occurrences * 2, 10);
                 if (!matchType) matchType = 'content';
             }
             
-            // 6. FUZZY MATCH (för felstavningar)
-            if (fuzzyMatch && score === 0) {
-                const fuzzyScore = this.fuzzySearch(searchTerm, titleLower) +
-                                  this.fuzzySearch(searchTerm, pageNameLower);
-                if (fuzzyScore > 0.7) {
-                    score += Math.floor(fuzzyScore * 10);
-                    matchType = 'fuzzy';
-                }
+            if (
+              fuzzyMatch &&
+              score === 0 &&
+              searchTerm.length >= 4
+            ) {
+              const fuzzyScore =
+              this.fuzzySearch(searchTerm, titleLower) +
+              this.fuzzySearch(searchTerm, pageNameLower);
+
+            if (fuzzyScore >= 0.8) {
+              matchType = 'fuzzy';
+              score = Math.min(Math.floor(fuzzyScore * 6), 6); // MAX 6 POÄNG
             }
+        }
             
             // 7. BOOST FÖR KORTARE TITLAR (mer relevanta)
             if (score > 0 && titleLower.length < 50) {
                 score += 5;
             }
 
+            if (!page.is_local) {
+                score *= 1.15;   // externa källor prioriteras
+            } else {
+                score *= 0.95;   // lokala något lägre
+            }
+
+            if (matchType === 'fuzzy' && !page.is_local) {
+              score *= 0.4;
+            }
+
             if (score > 0) {
                 results.push({
                     ...page,
-                    relevance_score: score,
+                    relevance_score: Math.round(score),
                     match_type: matchType,
                     snippet: this.extractSnippet(page.content, searchTerm)
                 });
             }
         }
 
-        // Sortera efter relevans
         results.sort((a, b) => b.relevance_score - a.relevance_score);
-        
-        return results;
+
+        const nonFuzzy = results.filter(r => r.match_type !== 'fuzzy');
+        const fuzzy = results.filter(r => r.match_type === 'fuzzy');
+
+        return [...nonFuzzy, ...fuzzy];
     }
 
     // Enkel fuzzy search (Levenshtein-liknande)
@@ -536,7 +554,10 @@ class ContentIndexer {
             }
         }
         
-        return matches / pattern.length;
+        const ratio = matches / pattern.length;
+        const lengthPenalty = pattern.length / text.length;
+
+        return ratio * lengthPenalty;
     }
 
     getIndexInfo() {

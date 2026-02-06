@@ -173,7 +173,7 @@ app.get('/health', (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`\n✅ Pentest Reference Search v3.0`);
+    console.log(`\n✅ Pentest Reference Search`);
     console.log(`🌐 Server körs på http://localhost:${PORT}`);
     console.log(`📂 Öppna http://localhost:${PORT} i din webbläsare\n`);
     
