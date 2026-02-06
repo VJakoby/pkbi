@@ -1,5 +1,5 @@
 {
-  "online-sources": [
+  "online_sources": [
     {
       "id": "pentest-everything",
       "name": "PenTest Everything",
@@ -105,7 +105,7 @@
       "id": "local-pentest-notes",
       "name": "Local Pentest Notes",
       "type": "markdown",
-      "path": "./local_notes",
+      "path": "./change/to/localnote/dir",
       "file_extensions": [
         ".md",
         ".markdown"
