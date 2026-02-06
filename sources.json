@@ -1,4 +1,18 @@
 {
+  "offline_sources": [
+    {
+      "id": "local-pentest-notes",
+      "name": "Local Pentest Notes",
+      "type": "markdown",
+      "path": "./change/to/localnote/dir",
+      "file_extensions": [
+        ".md",
+        ".markdown"
+      ],
+      "enabled": true,
+      "description": "Personal pentest notes in markdown format"
+    }
+  ],
   "online_sources": [
     {
       "id": "pentest-everything",
@@ -98,20 +112,6 @@
       "search_url": "https://exploit-notes.hdks.org?q={query}",
       "enabled": true,
       "description": "Exploit development and security research"
-    }
-  ],
-  "offline_sources": [
-    {
-      "id": "local-pentest-notes",
-      "name": "Local Pentest Notes",
-      "type": "markdown",
-      "path": "./change/to/localnote/dir",
-      "file_extensions": [
-        ".md",
-        ".markdown"
-      ],
-      "enabled": true,
-      "description": "Personal pentest notes in markdown format"
     }
   ],
   "index_settings": {
