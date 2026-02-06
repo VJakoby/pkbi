@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PRS</title>
+    <title>Pentest Reference Search (PRS)</title>
     <style>
         * {
             margin: 0;
@@ -458,12 +458,222 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        /* Markdown Preview Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            animation: fadeIn 0.2s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: #0d1117;
+            margin: 2% auto;
+            padding: 0;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 1200px;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-header {
+            padding: 20px 30px;
+            border-bottom: 1px solid #30363d;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #c9d1d9;
+        }
+
+        .modal-subtitle {
+            font-size: 14px;
+            color: #8b949e;
+            margin-top: 4px;
+        }
+
+        .modal-close {
+            background: #161b22;
+            border: 1px solid #30363d;
+            color: #c9d1d9;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .modal-close:hover {
+            background: #30363d;
+        }
+
+        .modal-body {
+            padding: 30px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .modal-footer {
+            padding: 20px 30px;
+            border-top: 1px solid #30363d;
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .modal-btn {
+            padding: 10px 20px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .modal-btn-primary {
+            background: #238636;
+            color: white;
+        }
+
+        .modal-btn-primary:hover {
+            background: #2ea043;
+        }
+
+        .modal-btn-secondary {
+            background: #161b22;
+            border: 1px solid #30363d;
+            color: #c9d1d9;
+        }
+
+        .modal-btn-secondary:hover {
+            background: #30363d;
+        }
+
+        /* Markdown Content Styling */
+        .markdown-content {
+            color: #c9d1d9;
+            line-height: 1.6;
+        }
+
+        .markdown-content h1 {
+            color: #58a6ff;
+            font-size: 2em;
+            margin-top: 24px;
+            margin-bottom: 16px;
+            border-bottom: 1px solid #30363d;
+            padding-bottom: 8px;
+        }
+
+        .markdown-content h2 {
+            color: #58a6ff;
+            font-size: 1.5em;
+            margin-top: 24px;
+            margin-bottom: 16px;
+        }
+
+        .markdown-content h3 {
+            color: #58a6ff;
+            font-size: 1.25em;
+            margin-top: 16px;
+            margin-bottom: 8px;
+        }
+
+        .markdown-content p {
+            margin-bottom: 16px;
+        }
+
+        .markdown-content code {
+            background: #161b22;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #f85149;
+        }
+
+        .markdown-content pre {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 16px;
+            overflow-x: auto;
+            margin-bottom: 16px;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+            color: #c9d1d9;
+        }
+
+        .markdown-content ul, .markdown-content ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+        }
+
+        .markdown-content li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #30363d;
+            padding-left: 16px;
+            margin: 16px 0;
+            color: #8b949e;
+        }
+
+        .markdown-content a {
+            color: #58a6ff;
+            text-decoration: none;
+        }
+
+        .markdown-content a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-bottom: 16px;
+        }
+
+        .markdown-content th, .markdown-content td {
+            border: 1px solid #30363d;
+            padding: 8px 12px;
+            text-align: left;
+        }
+
+        .markdown-content th {
+            background: #161b22;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🔍PRS (Pentesting Reference Search)</h1>
+            <h1>🔍 Pentest Reference Search (PRS)</h1>
+            <div class="version">v0.3</div>
         </div>
 
         <!-- Search -->
@@ -553,6 +763,28 @@
         </div>
     </div>
 
+    <!-- Markdown Preview Modal -->
+    <div id="previewModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <div class="modal-title" id="modalTitle">Loading...</div>
+                    <div class="modal-subtitle" id="modalSubtitle"></div>
+                </div>
+                <button class="modal-close" onclick="closePreview()">✕ Stäng</button>
+            </div>
+            <div class="modal-body">
+                <div class="markdown-content" id="modalContent">
+                    <p style="text-align: center; color: #8b949e;">Laddar...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn modal-btn-secondary" onclick="copyFilePath()">📋 Kopiera sökväg</button>
+                <button class="modal-btn modal-btn-primary" onclick="closePreview()">Stäng</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const searchInput = document.getElementById('searchInput');
         const resultsDiv = document.getElementById('results');
@@ -568,6 +800,7 @@
         
         let searchTimeout;
         let sourcesCollapsed = false;
+        let currentFilePath = null;
 
         // Toggle sources collapse
         function toggleSources() {
@@ -580,6 +813,60 @@
                 collapseArrow.classList.remove('collapsed');
             }
         }
+
+        // Preview modal functions
+        async function openPreview(filePath, title, pageName) {
+            currentFilePath = filePath;
+            const modal = document.getElementById('previewModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalSubtitle = document.getElementById('modalSubtitle');
+            const modalContent = document.getElementById('modalContent');
+            
+            modal.style.display = 'block';
+            modalTitle.textContent = title;
+            modalSubtitle.textContent = `📁 ${pageName}`;
+            modalContent.innerHTML = '<p style="text-align: center; color: #8b949e;">Laddar...</p>';
+            
+            try {
+                const response = await fetch(`/api/preview?file=${encodeURIComponent(filePath)}`);
+                const data = await response.json();
+                
+                if (data.error) {
+                    modalContent.innerHTML = `<p style="color: #f85149;">Error: ${data.error}</p>`;
+                } else {
+                    modalContent.innerHTML = data.html;
+                }
+            } catch (error) {
+                modalContent.innerHTML = `<p style="color: #f85149;">Could not load file preview</p>`;
+            }
+        }
+
+        function closePreview() {
+            document.getElementById('previewModal').style.display = 'none';
+            currentFilePath = null;
+        }
+
+        function copyFilePath() {
+            if (currentFilePath) {
+                navigator.clipboard.writeText(currentFilePath);
+                alert('📋 Sökväg kopierad till urklipp!');
+            }
+        }
+
+        // Close modal on background click
+        window.onclick = function(event) {
+            const modal = document.getElementById('previewModal');
+            if (event.target === modal) {
+                closePreview();
+            }
+        };
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closePreview();
+            }
+        });
 
         // Load sources on page load
         async function loadSources() {
@@ -697,7 +984,20 @@
         }
 
         function displayResults(results) {
-            resultsDiv.innerHTML = results.map(result => `
+            resultsDiv.innerHTML = results.map(result => {
+                const isLocal = result.url && result.url.startsWith('file://');
+                const localBadge = isLocal ? '<span class="badge" style="background: #8957e5;">📁 Lokal</span>' : '';
+                
+                // For local files, use preview; for online, use direct link
+                const openAction = isLocal 
+                    ? `onclick="openPreview('${escapeHtml(result.file_path || result.url.replace('file://', ''))}', '${escapeHtml(result.title)}', '${escapeHtml(result.page_name)}')" style="cursor: pointer;"`
+                    : `href="${result.url}" target="_blank"`;
+                
+                const openButton = isLocal
+                    ? `<button class="open-btn" onclick="openPreview('${escapeHtml(result.file_path || result.url.replace('file://', ''))}', '${escapeHtml(result.title)}', '${escapeHtml(result.page_name)}')">👁️ Förhandsgranska</button>`
+                    : `<a href="${result.url}" class="open-btn" target="_blank">Öppna sida →</a>`;
+                
+                return `
                 <div class="result-item">
                     <div class="result-header">
                         <div class="result-title-section">
@@ -705,6 +1005,7 @@
                             <div class="result-page-name">📄 ${escapeHtml(result.page_name)}</div>
                         </div>
                         <div class="result-badges">
+                            ${localBadge}
                             <span class="badge badge-score">${result.relevance_score}</span>
                             <span class="badge badge-match">${formatMatchType(result.match_type)}</span>
                         </div>
@@ -717,10 +1018,16 @@
                             ${escapeHtml(result.snippet)}
                         </div>
                     ` : ''}
-                    <a href="${result.url}" class="result-link" target="_blank">${result.url}</a>
-                    <a href="${result.url}" class="open-btn" target="_blank">Öppna sida →</a>
+                    ${isLocal ? `
+                        <div class="result-link" style="color: #8b949e; cursor: default;">
+                            📁 ${escapeHtml(result.file_path || result.url.replace('file://', ''))}
+                        </div>
+                    ` : `
+                        <a href="${result.url}" class="result-link" target="_blank">${result.url}</a>
+                    `}
+                    ${openButton}
                 </div>
-            `).join('');
+            `}).join('');
         }
 
         function formatMatchType(type) {

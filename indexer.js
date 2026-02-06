@@ -30,7 +30,129 @@ class ContentIndexer {
     async loadSources() {
         const sourcesData = await fs.readFile(this.sourcesPath, 'utf-8');
         const config = JSON.parse(sourcesData);
-        return config.sources.filter(s => s.enabled);
+        
+        const onlineSources = (config.online_sources || config.sources || []).filter(s => s.enabled);
+        const offlineSources = (config.offline_sources || []).filter(s => s.enabled);
+        
+        return {
+            online: onlineSources,
+            offline: offlineSources,
+            all: [...onlineSources, ...offlineSources]
+        };
+    }
+
+    resolvePath(configPath) {
+        // If relative path, resolve from project root
+        if (configPath.startsWith('./') || configPath.startsWith('../')) {
+            return path.resolve(__dirname, configPath);
+        }
+        // If absolute path, use as-is
+        return configPath;
+    }
+
+    async findMarkdownFiles(directory, extensions = ['.md']) {
+        const files = [];
+        
+        async function traverse(dir) {
+            try {
+                const entries = await fs.readdir(dir, { withFileTypes: true });
+                
+                for (const entry of entries) {
+                    const fullPath = path.join(dir, entry.name);
+                    
+                    if (entry.isDirectory()) {
+                        // Skip directories that end with .md (edge case)
+                        if (entry.name.endsWith('.md')) {
+                            console.log(`  ⏭️  Skipping directory: ${entry.name}`);
+                            continue;
+                        }
+                        await traverse(fullPath);
+                    } else if (entry.isFile()) {
+                        const ext = path.extname(entry.name).toLowerCase();
+                        if (extensions.includes(ext)) {
+                            files.push(fullPath);
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error(`  ❌ Error reading directory ${dir}:`, error.message);
+            }
+        }
+        
+        await traverse(directory);
+        return files;
+    }
+
+    extractMarkdownTitle(content, filePath) {
+        // Try to extract title from first # heading
+        const lines = content.split('\n');
+        for (const line of lines) {
+            const match = line.match(/^#\s+(.+)/);
+            if (match) {
+                return match[1].trim();
+            }
+        }
+        
+        // Fallback to filename without extension
+        return path.basename(filePath, path.extname(filePath));
+    }
+
+    async indexLocalSource(source) {
+        console.log(`\n📁 Indexerar ${source.name}...`);
+        const pages = [];
+        
+        const resolvedPath = this.resolvePath(source.path);
+        console.log(`  Sökväg: ${resolvedPath}`);
+        
+        try {
+            await fs.access(resolvedPath);
+        } catch (error) {
+            console.log(`  ⚠️  Mappen finns inte: ${resolvedPath}`);
+            console.log(`  💡 Skapa mappen eller uppdatera path i sources.json`);
+            return pages;
+        }
+        
+        const extensions = source.file_extensions || ['.md'];
+        const files = await this.findMarkdownFiles(resolvedPath, extensions);
+        
+        console.log(`  Hittade ${files.length} filer`);
+        
+        if (files.length === 0) {
+            console.log(`  ℹ️  Inga filer att indexera`);
+            return pages;
+        }
+        
+        for (const filePath of files) {
+            try {
+                const content = await fs.readFile(filePath, 'utf-8');
+                const title = this.extractMarkdownTitle(content, filePath);
+                
+                // Create relative path from source root for page name
+                const relativePath = path.relative(resolvedPath, filePath);
+                const pageName = relativePath.replace(/\\/g, '/').replace(/\.(md|txt)$/i, '');
+                
+                // Use file:// protocol for local files
+                const fileUrl = `file://${filePath}`;
+                
+                pages.push({
+                    source_id: source.id,
+                    source_name: source.name,
+                    url: fileUrl,
+                    file_path: filePath,  // Store actual file path for preview
+                    title: title,
+                    page_name: pageName,
+                    content: content.toLowerCase(),
+                    indexed_at: new Date().toISOString(),
+                    is_local: true
+                });
+                
+            } catch (error) {
+                console.error(`  ❌ Error reading ${filePath}:`, error.message);
+            }
+        }
+        
+        console.log(`  ✅ Indexerade ${pages.length} filer från ${source.name}`);
+        return pages;
     }
 
     async fetchPage(url, timeout = 15000) {
@@ -261,7 +383,9 @@ class ContentIndexer {
         const sources = await this.loadSources();
         const allPages = [];
 
-        for (const source of sources) {
+        // Index online sources
+        console.log('🌐 ONLINE KÄLLOR:');
+        for (const source of sources.online) {
             try {
                 let pages = [];
                 
@@ -277,16 +401,30 @@ class ContentIndexer {
             }
         }
 
+        // Index offline sources
+        if (sources.offline.length > 0) {
+            console.log('\n📁 OFFLINE KÄLLOR:');
+            for (const source of sources.offline) {
+                try {
+                    const pages = await this.indexLocalSource(source);
+                    allPages.push(...pages);
+                } catch (error) {
+                    console.error(`❌ Fel vid indexering av ${source.name}:`, error.message);
+                }
+            }
+        }
+
         this.index = {
             pages: allPages,
             last_updated: new Date().toISOString(),
             total_pages: allPages.length,
-            sources: sources.map(s => ({
+            sources: sources.all.map(s => ({
                 id: s.id,
                 name: s.name,
                 type: s.type,
                 description: s.description || '',
-                page_count: allPages.filter(p => p.source_id === s.id).length
+                page_count: allPages.filter(p => p.source_id === s.id).length,
+                is_local: s.type === 'local'
             }))
         };
 
@@ -294,6 +432,8 @@ class ContentIndexer {
         
         console.log('\n✅ Indexering klar!');
         console.log(`📊 Totalt indexerade sidor: ${allPages.length}`);
+        console.log(`   🌐 Online: ${allPages.filter(p => !p.is_local).length}`);
+        console.log(`   📁 Offline: ${allPages.filter(p => p.is_local).length}`);
         console.log(`💾 Index sparat i: ${this.indexPath}\n`);
     }
 

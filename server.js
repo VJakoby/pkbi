@@ -1,5 +1,8 @@
 const express = require('express');
 const cors = require('cors');
+const fs = require('fs').promises;
+const path = require('path');
+const { marked } = require('marked');
 const ContentIndexer = require('./indexer');
 
 const app = express();
@@ -104,6 +107,37 @@ app.get('/api/sources', (req, res) => {
         sources: info.sources || [],
         total: info.sources?.length || 0
     });
+});
+
+// API: Preview lokal markdown-fil
+app.get('/api/preview', async (req, res) => {
+    const { file } = req.query;
+    
+    if (!file) {
+        return res.status(400).json({ error: 'No file specified' });
+    }
+    
+    try {
+        // Security: Only allow files that are in the index
+        const page = indexer.index.pages.find(p => p.file_path === file);
+        if (!page) {
+            return res.status(404).json({ error: 'File not found in index' });
+        }
+        
+        const content = await fs.readFile(file, 'utf-8');
+        const html = marked(content);
+        
+        res.json({
+            title: page.title,
+            page_name: page.page_name,
+            html: html,
+            raw: content,
+            file_path: file
+        });
+    } catch (error) {
+        console.error('Preview error:', error);
+        res.status(500).json({ error: 'Could not read file' });
+    }
 });
 
 // API: Bygg om index (async)
