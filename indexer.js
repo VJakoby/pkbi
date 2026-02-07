@@ -122,38 +122,167 @@ class ContentIndexer {
             return pages;
         }
         
+        // Smart incremental: Check which files changed
+        let newFiles = 0;
+        let updatedFiles = 0;
+        let unchangedFiles = 0;
+        
         for (const filePath of files) {
             try {
-                const content = await fs.readFile(filePath, 'utf-8');
-                const title = this.extractMarkdownTitle(content, filePath);
+                const stats = await fs.stat(filePath);
+                const lastModified = stats.mtime.toISOString();
                 
-                // Create relative path from source root for page name
-                const relativePath = path.relative(resolvedPath, filePath);
-                const pageName = relativePath.replace(/\\/g, '/').replace(/\.(md|txt)$/i, '');
+                // Check if file exists in index and hasn't changed
+                const existingPage = this.index.pages.find(p => p.file_path === filePath);
                 
-                // Use file:// protocol for local files
-                const fileUrl = `file://${filePath}`;
+                if (existingPage && existingPage.file_modified === lastModified) {
+                    // File unchanged, keep existing entry
+                    pages.push(existingPage);
+                    unchangedFiles++;
+                    continue;
+                }
                 
-                pages.push({
-                    source_id: source.id,
-                    source_name: source.name,
-                    url: fileUrl,
-                    file_path: filePath,  // Store actual file path for preview
-                    display_path: pageName,
-                    title: title,
-                    page_name: pageName,
-                    content: content.toLowerCase(),
-                    indexed_at: new Date().toISOString(),
-                    is_local: true
-                });
-                
+                // File is new or modified, re-index it
+                const page = await this.indexSingleLocalFile(filePath, source, resolvedPath);
+                if (page) {
+                    page.file_modified = lastModified; // Track modification time
+                    pages.push(page);
+                    
+                    if (existingPage) {
+                        updatedFiles++;
+                    } else {
+                        newFiles++;
+                    }
+                }
             } catch (error) {
-                console.error(`  ❌ Error reading ${filePath}:`, error.message);
+                console.error(`  ❌ Error processing ${filePath}:`, error.message);
             }
         }
         
         console.log(`  ✅ Indexerade ${pages.length} filer från ${source.name}`);
+        if (newFiles > 0) console.log(`     🆕 ${newFiles} nya filer`);
+        if (updatedFiles > 0) console.log(`     🔄 ${updatedFiles} uppdaterade filer`);
+        if (unchangedFiles > 0) console.log(`     ⏭️  ${unchangedFiles} oförändrade filer`);
+        
         return pages;
+    }
+
+    // Helper method to index a single local file
+    async indexSingleLocalFile(filePath, source, resolvedPath) {
+        try {
+            const content = await fs.readFile(filePath, 'utf-8');
+            const title = this.extractMarkdownTitle(content, filePath);
+            
+            // Create relative path from source root for page name
+            const relativePath = path.relative(resolvedPath, filePath);
+            const pageName = relativePath.replace(/\\/g, '/').replace(/\.(md|txt)$/i, '');
+            
+            // Use file:// protocol for local files
+            const fileUrl = `file://${filePath}`;
+            
+            return {
+                source_id: source.id,
+                source_name: source.name,
+                url: fileUrl,
+                file_path: filePath,
+                title: title,
+                page_name: pageName,
+                content: content.toLowerCase(),
+                indexed_at: new Date().toISOString(),
+                is_local: true
+            };
+        } catch (error) {
+            console.error(`  ❌ Error reading ${filePath}:`, error.message);
+            return null;
+        }
+    }
+
+    // INCREMENTAL UPDATE: Update single local file without full re-index
+    async updateLocalFile(filePath) {
+        console.log(`\n🔄 Uppdaterar fil: ${filePath}`);
+        
+        // Find which source this file belongs to
+        const sources = await this.loadSources();
+        let sourceMatch = null;
+        let resolvedPath = null;
+        
+        for (const source of sources.offline) {
+            const sourcePath = this.resolvePath(source.path);
+            if (filePath.startsWith(sourcePath)) {
+                sourceMatch = source;
+                resolvedPath = sourcePath;
+                break;
+            }
+        }
+        
+        if (!sourceMatch) {
+            console.log('  ❌ Filen tillhör ingen känd källa');
+            return false;
+        }
+        
+        // Index the single file
+        const newPage = await this.indexSingleLocalFile(filePath, sourceMatch, resolvedPath);
+        
+        if (!newPage) {
+            console.log('  ❌ Kunde inte indexera filen');
+            return false;
+        }
+        
+        // Find and replace existing entry, or add new
+        const existingIndex = this.index.pages.findIndex(p => p.file_path === filePath);
+        
+        if (existingIndex >= 0) {
+            this.index.pages[existingIndex] = newPage;
+            console.log('  ✅ Fil uppdaterad i index');
+        } else {
+            this.index.pages.push(newPage);
+            console.log('  ✅ Ny fil tillagd i index');
+        }
+        
+        // Update index metadata
+        this.index.last_updated = new Date().toISOString();
+        this.index.total_pages = this.index.pages.length;
+        
+        // Update source page count
+        const sourceInIndex = this.index.sources.find(s => s.id === sourceMatch.id);
+        if (sourceInIndex) {
+            sourceInIndex.page_count = this.index.pages.filter(p => p.source_id === sourceMatch.id).length;
+        }
+        
+        await this.saveIndex();
+        console.log('  💾 Index sparat\n');
+        
+        return true;
+    }
+
+    // INCREMENTAL DELETE: Remove deleted local file from index
+    async removeLocalFile(filePath) {
+        console.log(`\n🗑️  Tar bort fil från index: ${filePath}`);
+        
+        const existingIndex = this.index.pages.findIndex(p => p.file_path === filePath);
+        
+        if (existingIndex >= 0) {
+            const removedPage = this.index.pages[existingIndex];
+            this.index.pages.splice(existingIndex, 1);
+            
+            // Update metadata
+            this.index.last_updated = new Date().toISOString();
+            this.index.total_pages = this.index.pages.length;
+            
+            // Update source page count
+            const sourceInIndex = this.index.sources.find(s => s.id === removedPage.source_id);
+            if (sourceInIndex) {
+                sourceInIndex.page_count = this.index.pages.filter(p => p.source_id === removedPage.source_id).length;
+            }
+            
+            await this.saveIndex();
+            console.log('  ✅ Fil borttagen från index');
+            console.log('  💾 Index sparat\n');
+            return true;
+        } else {
+            console.log('  ⚠️  Filen fanns inte i index');
+            return false;
+        }
     }
 
     async fetchPage(url, timeout = 15000) {
@@ -226,17 +355,38 @@ class ContentIndexer {
     }
 
     extractSnippet(content, searchTerm, length = 150) {
-        const index = content.toLowerCase().indexOf(searchTerm.toLowerCase());
-        if (index === -1) return '';
+        const lowerContent = content.toLowerCase();
+        const lowerTerm = searchTerm.toLowerCase();
+        const index = lowerContent.indexOf(lowerTerm);
+        
+        if (index === -1) {
+            return {
+                text: '',
+                highlightStart: -1,
+                highlightLength: 0
+            };
+        }
         
         const start = Math.max(0, index - length / 2);
         const end = Math.min(content.length, index + searchTerm.length + length / 2);
         
         let snippet = content.substring(start, end);
-        if (start > 0) snippet = '...' + snippet;
-        if (end < content.length) snippet = snippet + '...';
+        let highlightStart = snippet.toLowerCase().indexOf(lowerTerm);
         
-        return snippet;
+        // Add ellipsis
+        if (start > 0) {
+            snippet = '...' + snippet;
+            highlightStart += 3; // Adjust for ellipsis
+        }
+        if (end < content.length) {
+            snippet = snippet + '...';
+        }
+        
+        return {
+            text: snippet,
+            highlightStart: highlightStart,
+            highlightLength: searchTerm.length
+        };
     }
 
     async indexGitBookSource(source) {
@@ -378,6 +528,91 @@ class ContentIndexer {
         return pages;
     }
 
+    async indexMarkdownSource(source) {
+        console.log(`\n📄 Indexerar ${source.name}...`);
+        const pages = [];
+
+        if (!source.urls || source.urls.length === 0) {
+            console.log('  ⚠️  Inga URLs specificerade');
+            return pages;
+        }
+
+        console.log(`  Hittade ${source.urls.length} markdown-filer att indexera`);
+
+        // Parallell crawling
+        const chunkSize = 5;
+        let indexed = 0;
+        let successful = 0;
+
+        for (let i = 0; i < source.urls.length; i += chunkSize) {
+            const chunk = source.urls.slice(i, i + chunkSize);
+            const promises = chunk.map(async (url) => {
+                const markdownContent = await this.fetchPage(url);
+                
+                if (markdownContent) {
+                    // Extract title from first # heading in markdown
+                    const lines = markdownContent.split('\n');
+                    let title = null;
+                    for (const line of lines) {
+                        const match = line.match(/^#\s+(.+)/);
+                        if (match) {
+                            title = match[1].trim();
+                            break;
+                        }
+                    }
+                    
+                    // Fallback: use filename from URL
+                    if (!title) {
+                        const urlParts = url.split('/');
+                        title = urlParts[urlParts.length - 1]
+                            .replace(/\.md$/i, '')
+                            .replace(/[-_]/g, ' ');
+                    }
+                    
+                    // Extract page name from URL
+                    const urlObj = new URL(url);
+                    const pathParts = urlObj.pathname.split('/').filter(p => p);
+                    const pageName = pathParts[pathParts.length - 1]
+                        .replace(/\.md$/i, '')
+                        .replace(/[-_]/g, ' ');
+                    
+                    // Convert markdown content to lowercase for search
+                    const content = markdownContent
+                        .replace(/```[\s\S]*?```/g, ' ') // Remove code blocks
+                        .replace(/`[^`]+`/g, ' ') // Remove inline code
+                        .replace(/[#*_\[\]()]/g, ' ') // Remove markdown symbols
+                        .replace(/\s+/g, ' ')
+                        .trim()
+                        .toLowerCase();
+                    
+                    return {
+                        source_id: source.id,
+                        source_name: source.name,
+                        url: url,
+                        title: title,
+                        page_name: pageName,
+                        content: content.substring(0, 10000),
+                        indexed_at: new Date().toISOString()
+                    };
+                }
+                return null;
+            });
+
+            const results = await Promise.all(promises);
+            const validResults = results.filter(p => p !== null);
+            pages.push(...validResults);
+            successful += validResults.length;
+            
+            indexed += chunk.length;
+            console.log(`  Indexerade ${indexed}/${source.urls.length} filer (${successful} lyckade)...`);
+            
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+
+        console.log(`  ✅ Indexerade totalt ${pages.length} markdown-filer från ${source.name}`);
+        return pages;
+    }
+
     async buildIndex() {
         console.log('\n🚀 Startar indexering av alla källor...\n');
         
@@ -394,6 +629,10 @@ class ContentIndexer {
                     pages = await this.indexGitBookSource(source);
                 } else if (source.type === 'docusaurus') {
                     pages = await this.indexDocusaurusSource(source);
+                } else if (source.type === 'markdown') {
+                    pages = await this.indexMarkdownSource(source);
+                } else {
+                    console.log(`⚠️  Okänd källtyp: ${source.type} för ${source.name}`);
                 }
                 
                 allPages.push(...pages);
@@ -439,9 +678,28 @@ class ContentIndexer {
     }
 
     async saveIndex() {
+        // Prepare index for saving
+        const indexData = JSON.stringify(this.index, null, 2);
+        const sizeKB = (indexData.length / 1024).toFixed(2);
+        
+        console.log(`💾 Sparar index (${sizeKB} KB)...`);
+        
         await fs.writeFile(
             this.indexPath,
-            JSON.stringify(this.index, null, 2),
+            indexData,
+            'utf-8'
+        );
+        
+        // Optional: Save metadata about index size for future optimization
+        const metadataPath = this.indexPath.replace('.json', '.meta.json');
+        await fs.writeFile(
+            metadataPath,
+            JSON.stringify({
+                size_bytes: indexData.length,
+                size_kb: parseFloat(sizeKB),
+                pages_count: this.index.pages.length,
+                last_saved: new Date().toISOString()
+            }, null, 2),
             'utf-8'
         );
     }
@@ -487,56 +745,39 @@ class ContentIndexer {
             // 5. INNEHÅLLS-MATCH
             const occurrences = (contentLower.match(new RegExp(searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi')) || []).length;
             if (occurrences > 0) {
-                score += Math.min(occurrences * 2, 10);
+                score += occurrences * 2;
                 if (!matchType) matchType = 'content';
             }
             
-            if (
-              fuzzyMatch &&
-              score === 0 &&
-              searchTerm.length >= 4
-            ) {
-              const fuzzyScore =
-              this.fuzzySearch(searchTerm, titleLower) +
-              this.fuzzySearch(searchTerm, pageNameLower);
-
-            if (fuzzyScore >= 0.8) {
-              matchType = 'fuzzy';
-              score = Math.min(Math.floor(fuzzyScore * 6), 6); // MAX 6 POÄNG
+            // 6. FUZZY MATCH (för felstavningar)
+            if (fuzzyMatch && score === 0) {
+                const fuzzyScore = this.fuzzySearch(searchTerm, titleLower) +
+                                  this.fuzzySearch(searchTerm, pageNameLower);
+                if (fuzzyScore > 0.7) {
+                    score += Math.floor(fuzzyScore * 10);
+                    matchType = 'fuzzy';
+                }
             }
-        }
             
             // 7. BOOST FÖR KORTARE TITLAR (mer relevanta)
             if (score > 0 && titleLower.length < 50) {
                 score += 5;
             }
 
-            if (!page.is_local) {
-                score *= 1.15;   // externa källor prioriteras
-            } else {
-                score *= 0.95;   // lokala något lägre
-            }
-
-            if (matchType === 'fuzzy' && !page.is_local) {
-              score *= 0.4;
-            }
-
             if (score > 0) {
                 results.push({
                     ...page,
-                    relevance_score: Math.round(score),
+                    relevance_score: score,
                     match_type: matchType,
                     snippet: this.extractSnippet(page.content, searchTerm)
                 });
             }
         }
 
+        // Sortera efter relevans
         results.sort((a, b) => b.relevance_score - a.relevance_score);
-
-        const nonFuzzy = results.filter(r => r.match_type !== 'fuzzy');
-        const fuzzy = results.filter(r => r.match_type === 'fuzzy');
-
-        return [...nonFuzzy, ...fuzzy];
+        
+        return results;
     }
 
     // Enkel fuzzy search (Levenshtein-liknande)
@@ -554,10 +795,7 @@ class ContentIndexer {
             }
         }
         
-        const ratio = matches / pattern.length;
-        const lengthPenalty = pattern.length / text.length;
-
-        return ratio * lengthPenalty;
+        return matches / pattern.length;
     }
 
     getIndexInfo() {
@@ -579,6 +817,12 @@ if (require.main === module) {
         
         if (command === 'build' || command === 'rebuild') {
             await indexer.buildIndex();
+        } else if (command === 'update' && process.argv[3]) {
+            const filePath = process.argv[3];
+            await indexer.updateLocalFile(filePath);
+        } else if (command === 'remove' && process.argv[3]) {
+            const filePath = process.argv[3];
+            await indexer.removeLocalFile(filePath);
         } else if (command === 'search' && process.argv[3]) {
             const query = process.argv.slice(3).join(' ');
             const results = indexer.search(query);
@@ -590,7 +834,11 @@ if (require.main === module) {
                 results.slice(0, 10).forEach((result, i) => {
                     console.log(`${i + 1}. ${result.title} (${result.page_name})`);
                     console.log(`   ${result.url}`);
-                    console.log(`   Score: ${result.relevance_score} (${result.match_type})\n`);
+                    console.log(`   Score: ${result.relevance_score} (${result.match_type})`);
+                    if (result.snippet && result.snippet.text) {
+                        console.log(`   Snippet: ${result.snippet.text.substring(0, 80)}...`);
+                    }
+                    console.log();
                 });
                 console.log(`Totalt ${results.length} resultat hittades.\n`);
             }
@@ -607,9 +855,11 @@ if (require.main === module) {
         } else {
             console.log('\n📚 Pentest Reference Indexer v3.0\n');
             console.log('Användning:');
-            console.log('  node indexer.js build          - Bygg om hela indexet');
-            console.log('  node indexer.js search <term>  - Sök i indexet');
-            console.log('  node indexer.js info           - Visa index-information\n');
+            console.log('  node indexer.js build              - Bygg om hela indexet');
+            console.log('  node indexer.js update <filepath>  - Uppdatera en lokal fil');
+            console.log('  node indexer.js remove <filepath>  - Ta bort fil från index');
+            console.log('  node indexer.js search <term>      - Sök i indexet');
+            console.log('  node indexer.js info               - Visa index-information\n');
         }
     })();
 }

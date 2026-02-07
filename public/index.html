@@ -11,11 +11,43 @@
             box-sizing: border-box;
         }
 
+        :root {
+            /* Dark mode (default) */
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #21262d;
+            --border-color: #30363d;
+            --text-primary: #c9d1d9;
+            --text-secondary: #8b949e;
+            --accent-blue: #58a6ff;
+            --accent-green: #238636;
+            --accent-green-hover: #2ea043;
+            --accent-purple: #8957e5;
+            --accent-red: #f85149;
+            --shadow-color: rgba(88, 166, 255, 0.1);
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f6f8fa;
+            --bg-tertiary: #eaeef2;
+            --border-color: #d0d7de;
+            --text-primary: #24292f;
+            --text-secondary: #57606a;
+            --accent-blue: #0969da;
+            --accent-green: #1a7f37;
+            --accent-green-hover: #26a148;
+            --accent-purple: #8250df;
+            --accent-red: #cf222e;
+            --shadow-color: rgba(9, 105, 218, 0.1);
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: #0d1117;
-            color: #c9d1d9;
+            background: var(--bg-primary);
+            color: var(--text-primary);
             min-height: 100vh;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
 
         .container {
@@ -28,24 +60,52 @@
         .header {
             text-align: center;
             padding: 40px 0 20px;
+            position: relative;
+        }
+
+        .theme-toggle {
+            position: absolute;
+            top: 40px;
+            right: 20px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 20px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .theme-toggle:hover {
+            background: var(--bg-tertiary);
+            transform: scale(1.05);
+        }
+
+        .theme-toggle-text {
+            font-size: 14px;
+            font-weight: 500;
         }
 
         h1 {
-            color: #58a6ff;
+            color: var(--accent-blue);
             font-size: 2.5em;
             margin-bottom: 10px;
             font-weight: 700;
         }
 
         .version {
-            color: #8b949e;
+            color: var(--text-secondary);
             font-size: 14px;
         }
 
         /* Sources Section */
         .sources-section {
-            background: #161b22;
-            border: 1px solid #30363d;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
             border-radius: 8px;
             padding: 20px;
             margin-top: 40px;
@@ -65,7 +125,7 @@
         }
 
         .collapse-arrow {
-            color: #8b949e;
+            color: var(--text-secondary);
             font-size: 14px;
             transition: transform 0.3s ease;
         }
@@ -75,7 +135,7 @@
         }
 
         .sources-title {
-            color: #c9d1d9;
+            color: var(--text-primary);
             font-size: 16px;
             font-weight: 600;
             display: flex;
@@ -84,7 +144,7 @@
         }
 
         .sources-count {
-            background: #1f6feb;
+            background: var(--accent-blue);
             color: white;
             padding: 4px 10px;
             border-radius: 12px;
@@ -108,20 +168,20 @@
         }
 
         .source-card {
-            background: #0d1117;
-            border: 1px solid #30363d;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
             border-radius: 6px;
             padding: 14px;
             transition: all 0.2s;
         }
 
         .source-card:hover {
-            border-color: #58a6ff;
+            border-color: var(--accent-blue);
             transform: translateY(-2px);
         }
 
         .source-name {
-            color: #58a6ff;
+            color: var(--accent-blue);
             font-weight: 600;
             font-size: 14px;
             margin-bottom: 4px;
@@ -129,7 +189,7 @@
 
         .source-type {
             display: inline-block;
-            background: #238636;
+            background: var(--accent-green);
             color: white;
             padding: 2px 6px;
             border-radius: 3px;
@@ -139,13 +199,13 @@
         }
 
         .source-desc {
-            color: #8b949e;
+            color: var(--text-secondary);
             font-size: 12px;
             margin-top: 6px;
         }
 
         .source-pages {
-            color: #8b949e;
+            color: var(--text-secondary);
             font-size: 11px;
             margin-top: 6px;
             display: flex;
@@ -230,6 +290,57 @@
 
         .stat strong {
             color: #c9d1d9;
+        }
+
+        /* Filter Tabs */
+        .filter-tabs {
+            display: none;
+            margin-bottom: 15px;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .filter-tabs.visible {
+            display: flex;
+        }
+
+        .filter-tab {
+            background: #161b22;
+            border: 1px solid #30363d;
+            color: #c9d1d9;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            user-select: none;
+        }
+
+        .filter-tab:hover {
+            background: #21262d;
+            border-color: #58a6ff;
+        }
+
+        .filter-tab.active {
+            background: #58a6ff;
+            border-color: #58a6ff;
+            color: white;
+        }
+
+        .filter-tab-count {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .filter-tab.active .filter-tab-count {
+            background: rgba(255, 255, 255, 0.3);
         }
 
         /* Results */
@@ -444,6 +555,15 @@
         @media (max-width: 768px) {
             h1 {
                 font-size: 2em;
+            }
+
+            .filter-tabs {
+                justify-content: center;
+            }
+
+            .filter-tab {
+                padding: 6px 12px;
+                font-size: 13px;
             }
 
             .sources-grid {
@@ -673,7 +793,7 @@
     <div class="container">
         <div class="header">
             <h1>🔍 Pentest Reference Search (PRS)</h1>
-            <div class="version">v0.3</div>
+            <div class="version">v1.0</div>
         </div>
 
         <!-- Search -->
@@ -699,6 +819,22 @@
                 <span class="stat" id="resultsCount"></span>
                 <span class="stat" id="searchStats"></span>
             </div>
+        </div>
+
+        <!-- Filter Tabs -->
+        <div class="filter-tabs" id="filterTabs">
+            <button class="filter-tab active" id="tab-all" onclick="setFilter('all')">
+                Alla
+                <span class="filter-tab-count" id="count-all">0</span>
+            </button>
+            <button class="filter-tab" id="tab-local" onclick="setFilter('local')">
+                📁 Mina
+                <span class="filter-tab-count" id="count-local">0</span>
+            </button>
+            <button class="filter-tab" id="tab-online" onclick="setFilter('online')">
+                🌐 Online
+                <span class="filter-tab-count" id="count-online">0</span>
+            </button>
         </div>
 
         <!-- Results -->
@@ -790,6 +926,7 @@
         const resultsDiv = document.getElementById('results');
         const loadingDiv = document.getElementById('loading');
         const resultsInfo = document.getElementById('resultsInfo');
+        const filterTabs = document.getElementById('filterTabs');
         const tipsDiv = document.getElementById('tips');
         const sourcesSection = document.getElementById('sourcesSection');
         const sourcesGrid = document.getElementById('sourcesGrid');
@@ -801,6 +938,11 @@
         let searchTimeout;
         let sourcesCollapsed = false;
         let currentFilePath = null;
+        let allSearchResults = []; // Store all results
+        let currentFilter = 'all'; // Current filter state
+
+        // Theme management (if exists)
+        // ... existing theme code ...
 
         // Toggle sources collapse
         function toggleSources() {
@@ -812,6 +954,54 @@
                 sourcesGrid.classList.remove('collapsed');
                 collapseArrow.classList.remove('collapsed');
             }
+        }
+
+        // Filter functionality
+        function setFilter(type) {
+            currentFilter = type;
+            
+            // Update active tab
+            document.querySelectorAll('.filter-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.getElementById(`tab-${type}`).classList.add('active');
+            
+            // Apply filter and display
+            applyFilter();
+        }
+
+        function applyFilter() {
+            let filtered = allSearchResults;
+            
+            if (currentFilter === 'local') {
+                filtered = allSearchResults.filter(r => r.is_local);
+            } else if (currentFilter === 'online') {
+                filtered = allSearchResults.filter(r => !r.is_local);
+            }
+            
+            displayResults(filtered);
+            
+            // Update result count in info bar
+            const totalCount = allSearchResults.length;
+            const filteredCount = filtered.length;
+            
+            if (currentFilter !== 'all') {
+                document.getElementById('resultsCount').innerHTML = 
+                    `<strong>${filteredCount}</strong> av <strong>${totalCount}</strong> resultat`;
+            } else {
+                document.getElementById('resultsCount').innerHTML = 
+                    `<strong>${totalCount}</strong> resultat`;
+            }
+        }
+
+        function updateFilterCounts() {
+            const localCount = allSearchResults.filter(r => r.is_local).length;
+            const onlineCount = allSearchResults.filter(r => !r.is_local).length;
+            const totalCount = allSearchResults.length;
+            
+            document.getElementById('count-all').textContent = totalCount;
+            document.getElementById('count-local').textContent = localCount;
+            document.getElementById('count-online').textContent = onlineCount;
         }
 
         // Preview modal functions
@@ -908,6 +1098,7 @@
             if (query.length === 0) {
                 resultsDiv.innerHTML = '';
                 resultsInfo.style.display = 'none';
+                filterTabs.classList.remove('visible');
                 tipsDiv.style.display = 'block';
                 sourcesSection.style.display = 'block';
                 return;
@@ -965,7 +1156,23 @@
                             <div class="no-results-hint">Prova en annan sökterm eller kontrollera stavningen</div>
                         </div>
                     `;
+                    filterTabs.classList.remove('visible');
                 } else {
+                    // Store results globally
+                    allSearchResults = data.results;
+                    
+                    // Show and update filter tabs
+                    filterTabs.classList.add('visible');
+                    updateFilterCounts();
+                    
+                    // Reset to 'all' filter on new search
+                    currentFilter = 'all';
+                    document.querySelectorAll('.filter-tab').forEach(tab => {
+                        tab.classList.remove('active');
+                    });
+                    document.getElementById('tab-all').classList.add('active');
+                    
+                    // Display results
                     resultsInfo.style.display = 'block';
                     resultsCount.innerHTML = `<strong>${data.count}</strong> resultat för "<strong>${escapeHtml(query)}</strong>"`;
                     searchStats.textContent = `Sökte igenom ${data.total_searched} sidor på ${data.search_time_ms}ms`;
@@ -986,7 +1193,7 @@
         function displayResults(results) {
             resultsDiv.innerHTML = results.map(result => {
                 const isLocal = result.url && result.url.startsWith('file://');
-                const localBadge = isLocal ? '<span class="badge" style="background: #8957e5;">📁 Lokal</span>' : '';
+                const localBadge = isLocal ? '<span class="badge" style="background: var(--accent-purple);">📁 Lokal</span>' : '';
                 
                 // For local files, use preview; for online, use direct link
                 const openAction = isLocal 
@@ -996,6 +1203,27 @@
                 const openButton = isLocal
                     ? `<button class="open-btn" onclick="openPreview('${escapeHtml(result.file_path || result.url.replace('file://', ''))}', '${escapeHtml(result.title)}', '${escapeHtml(result.page_name)}')">👁️ Förhandsgranska</button>`
                     : `<a href="${result.url}" class="open-btn" target="_blank">Öppna sida →</a>`;
+                
+                // Highlight snippet if available
+                let snippetHTML = '';
+                if (result.snippet) {
+                    // Handle both old string format and new object format
+                    if (typeof result.snippet === 'string') {
+                        // Old format: just a string
+                        snippetHTML = `<div class="result-snippet">${escapeHtml(result.snippet)}</div>`;
+                    } else if (result.snippet.text) {
+                        // New format: object with highlight metadata
+                        const snippet = result.snippet;
+                        if (snippet.highlightStart >= 0 && snippet.highlightLength > 0) {
+                            const before = escapeHtml(snippet.text.substring(0, snippet.highlightStart));
+                            const highlight = escapeHtml(snippet.text.substring(snippet.highlightStart, snippet.highlightStart + snippet.highlightLength));
+                            const after = escapeHtml(snippet.text.substring(snippet.highlightStart + snippet.highlightLength));
+                            snippetHTML = `<div class="result-snippet">${before}<mark style="background: rgba(88, 166, 255, 0.3); color: #58a6ff; font-weight: 600; padding: 2px 4px; border-radius: 3px;">${highlight}</mark>${after}</div>`;
+                        } else {
+                            snippetHTML = `<div class="result-snippet">${escapeHtml(snippet.text)}</div>`;
+                        }
+                    }
+                }
                 
                 return `
                 <div class="result-item">
@@ -1013,13 +1241,9 @@
                     <div class="result-source">
                         📚 ${escapeHtml(result.source_name)}
                     </div>
-                    ${result.snippet ? `
-                        <div class="result-snippet">
-                            ${escapeHtml(result.snippet)}
-                        </div>
-                    ` : ''}
+                    ${snippetHTML}
                     ${isLocal ? `
-                        <div class="result-link" style="color: #8b949e; cursor: default;">
+                        <div class="result-link" style="color: var(--text-secondary); cursor: default;">
                             📁 ${escapeHtml(result.file_path || result.url.replace('file://', ''))}
                         </div>
                     ` : `
