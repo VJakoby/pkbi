@@ -864,11 +864,11 @@ if (require.main === module) {
             });
             console.log();
         } else {
-            console.log('\n📚 Pentest Reference Indexer v3.0\n');
+            console.log('\n📚 PRS Indexer\n');
             console.log('Usage:');
             console.log('  node indexer.js build              - Rebuild entire index');
             console.log('  node indexer.js update <filepath>  - Update a local file');
-            console.log('  node indexer.js remove <filepath>  - Ta bort fil from index');
+            console.log('  node indexer.js remove <filepath>  - Remove a file from the index');
             console.log('  node indexer.js search <term>      - Search in index');
             console.log('  node indexer.js info               - Show index information\n');
         }

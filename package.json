@@ -1,6 +1,5 @@
 {
   "name": "pentest-reference-search",
-  "version": "3.0.0",
   "description": "Optimized indexed search for pentest reference sites with fuzzy search and advanced scoring",
   "main": "server.js",
   "scripts": {
@@ -18,6 +17,6 @@
     "cheerio": "^1.0.0-rc.12"
   },
   "keywords": ["pentest", "security", "search", "indexer"],
-  "author": "",
+  "author": "VJakoby",
   "license": "MIT"
 }

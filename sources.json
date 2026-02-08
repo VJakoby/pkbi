@@ -15,6 +15,17 @@
   ],
   "online_sources": [
     {
+      "id": "github-notes-example",
+      "name": "GitHub Security Notes Example",
+      "type": "markdown",
+      "enabled": true,
+      "description": "EXAMPLE Raw markdown files from GitHub",
+      "urls": [
+        "https://raw.githubusercontent.com/user/repo/main/SECURITY.md",
+        "https://raw.githubusercontent.com/user/repo/main/docs/guide.md"
+      ]
+    },
+    {
       "id": "pentest-everything",
       "name": "PenTest Everything",
       "type": "gitbook",
