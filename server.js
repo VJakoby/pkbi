@@ -11,30 +11,30 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
-// Initialize indexer
+// Initiera indexer
 const indexer = new ContentIndexer();
 let indexReady = false;
 
-// Load index on startup
+// Ladda index vid start
 (async () => {
     try {
         await indexer.initialize();
         const info = indexer.getIndexInfo();
         
         if (info.total_pages > 0) {
-            console.log(`\n✅ Index loaded with ${info.total_pages} pages`);
-            console.log(`📅 Last updated: ${info.last_updated || 'Never'}`);
-            console.log(`📚 Sources:`);
+            console.log(`\n✅ Index laddat med ${info.total_pages} sidor`);
+            console.log(`📅 Senast uppdaterat: ${info.last_updated || 'Aldrig'}`);
+            console.log(`📚 Källor:`);
             info.sources.forEach(s => {
-                console.log(`   - ${s.name}: ${s.page_count} pages`);
+                console.log(`   - ${s.name}: ${s.page_count} sidor`);
             });
             console.log();
             indexReady = true;
         } else {
-            console.log('\n⚠️  Index is empty. Run "npm run index" to build the index.\n');
+            console.log('\n⚠️  Index är tomt. Kör "npm run index" för att bygga indexet.\n');
         }
     } catch (error) {
-        console.error('❌ Error loading index:', error.message);
+        console.error('❌ Fel vid laddning av index:', error.message);
     }
 })();
 
@@ -54,7 +54,7 @@ app.post('/api/search', (req, res) => {
     
     if (!indexReady) {
         return res.status(503).json({
-            error: 'Index not ready. Run "npm run index" first.',
+            error: 'Index not ready. Run "npm run index" först.',
             results: [],
             count: 0
         });
@@ -92,9 +92,9 @@ app.post('/api/search', (req, res) => {
             total_searched: indexer.index.pages.length
         });
     } catch (error) {
-        console.error('Search error:', error);
+        console.error('Sökfel:', error);
         res.status(500).json({
-            error: 'Search error',
+            error: 'Fel vid sökning',
             results: [],
             count: 0
         });
@@ -242,25 +242,25 @@ app.post('/api/remove-file', async (req, res) => {
     }
 });
 
-// API: Rebuild index (async)
+// API: Bygg om index (async)
 app.post('/api/rebuild-index', async (req, res) => {
     if (!indexReady) {
         return res.status(503).json({
-            error: 'Indexing already in progress or cannot be started'
+            error: 'Indexering pågår redan eller kan inte startas'
         });
     }
 
     try {
-        console.log('🔄 Starting index rebuild...');
-        res.json({ message: 'Indexing started in the background' });
+        console.log('🔄 Startar ombyggnad av index...');
+        res.json({ message: 'Indexering startad i bakgrunden' });
         
         indexReady = false;
         await indexer.buildIndex();
         indexReady = true;
         
-        console.log('✅ Index rebuilt!');
+        console.log('✅ Index ombyggt!');
     } catch (error) {
-        console.error('❌ Error rebuilding:', error);
+        console.error('❌ Fel vid ombyggnad:', error);
         indexReady = true; // Återställ status
     }
 });
@@ -275,18 +275,18 @@ app.get('/health', (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`\n✅ Pentest Reference Search (PRS)`);
-    console.log(`🌐 Server running on http://localhost:${PORT}`);
-    console.log(`📂 Open http://localhost:${PORT} in your browser\n`);
+    console.log(`\n✅ Pentest Reference Search v3.0`);
+    console.log(`🌐 Server körs på http://localhost:${PORT}`);
+    console.log(`📂 Öppna http://localhost:${PORT} i din webbläsare\n`);
     
     if (!indexReady) {
-        console.log('⚠️  WARNING: Index is not ready!');
-        console.log('   Run: npm run index\n');
+        console.log('⚠️  OBS: Index är inte redo!');
+        console.log('   Kör: npm run index\n');
     }
 });
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
-    console.log('\n🛑 Shutting down server...');
+    console.log('\n🛑 Stänger ner servern...');
     process.exit(0);
 });

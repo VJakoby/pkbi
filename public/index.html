@@ -740,10 +740,10 @@
             <input 
                 type="text" 
                 id="searchInput" 
-                placeholder="Search for anything... (e.g. 'kerberos', 'windows enumeration', 'sql injection')"
+                placeholder="Search for anything..."
                 autocomplete="off"
             >
-            <div class="search-hint">💡 Tip: Try misspellings - fuzzy search finds the right result anyway!</div>
+            <div class="search-hint">💡 Tips: Try misspellings - fuzzy search will still find it!</div>
         </div>
 
         <!-- Loading -->
@@ -765,10 +765,10 @@
 
         <!-- Tips (shown when no search) -->
         <div class="tips" id="tips">
-            <div class="tips-title">💡 Search Examples</div>
+            <div class="tips-title">💡 Exempel in sökningar</div>
             <div class="tips-grid">
                 <div class="tip-card">
-                    <h3>🔐 Services & Protocols</h3>
+                    <h3>🔐 Services Tjänster & Protokoll Protocols</h3>
                     <div class="tip-examples">
                         <span class="tip-example">ssh</span>
                         <span class="tip-example">kerberos</span>
@@ -778,7 +778,7 @@
                     </div>
                 </div>
                 <div class="tip-card">
-                    <h3>🌐 Web Vulnerabilities</h3>
+                    <h3>🌐 Web vulnerabilities</h3>
                     <div class="tip-examples">
                         <span class="tip-example">sql injection</span>
                         <span class="tip-example">xss</span>
@@ -937,7 +937,7 @@
                 const data = await response.json();
                 
                 if (data.sources && data.sources.length > 0) {
-                    sourcesCount.textContent = `${data.total} sources`;
+                    sourcesCount.textContent = `${data.total} källor`;
                     
                     sourcesGrid.innerHTML = data.sources.map(source => `
                         <div class="source-card">
@@ -1013,7 +1013,7 @@
                     resultsDiv.innerHTML = `
                         <div class="error-message">
                             <h3>${data.error}</h3>
-                            <p style="margin-top: 10px;">Run: <code>npm run index</code></p>
+                            <p style="margin-top: 10px;">Kör: <code>npm run index</code></p>
                         </div>
                     `;
                     return;
@@ -1024,13 +1024,13 @@
                         <div class="no-results">
                             <div class="no-results-icon">🔍</div>
                             <div class="no-results-text">0 results found</div>
-                            <div class="no-results-hint">Try a different search term or check the spelling</div>
+                            <div class="no-results-hint">Try another search term or check spelling</div>
                         </div>
                     `;
                 } else {
                     resultsInfo.style.display = 'block';
                     resultsCount.innerHTML = `<strong>${data.count}</strong> results for "<strong>${escapeHtml(query)}</strong>"`;
-                    searchStats.textContent = `Searched ${data.total_searched} pages in ${data.search_time_ms}ms`;
+                    searchStats.textContent = `Searched through ${data.total_searched} sidor in ${data.search_time_ms}ms`;
                     
                     displayResults(data.results);
                 }
@@ -1038,8 +1038,8 @@
                 loadingDiv.style.display = 'none';
                 resultsDiv.innerHTML = `
                     <div class="error-message">
-                        <h3>❌ Connection Error</h3>
-                        <p style="margin-top: 10px;">Make sure the server is running: <code>npm start</code></p>
+                        <h3>❌ Connection error</h3>
+                        <p style="margin-top: 10px;">Check that server is running: <code>npm start</code></p>
                     </div>
                 `;
             }
@@ -1048,7 +1048,7 @@
         function displayResults(results) {
             resultsDiv.innerHTML = results.map(result => {
                 const isLocal = result.url && result.url.startsWith('file://');
-                const localBadge = isLocal ? '<span class="badge" style="background: var(--accent-purple);">📁 Local</span>' : '';
+                const localBadge = isLocal ? '<span class="badge" style="background: var(--accent-purple);">📁 Lokal</span>' : '';
                 
                 // For local files, use preview; for online, use direct link
                 const openAction = isLocal 
@@ -1111,11 +1111,11 @@
 
         function formatMatchType(type) {
             const types = {
-                'exact_title': '🎯 Exact',
-                'title_contains': '📌 Title',
-                'page_name': '📄 Page name',
+                'exact_title': '🎯 Exakt',
+                'title_contains': '📌 Titel',
+                'page_name': '📄 Sidnamn',
                 'url': '🔗 URL',
-                'content': '📝 Content',
+                'content': '📝 Innehåll',
                 'fuzzy': '🔍 Fuzzy'
             };
             return types[type] || type;

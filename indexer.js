@@ -107,8 +107,8 @@ class ContentIndexer {
         try {
             await fs.access(resolvedPath);
         } catch (error) {
-            console.log(`  ⚠️  Folder does not exist: ${resolvedPath}`);
-            console.log(`  💡 Create the folder or update path in sources.json`);
+            console.log(`  ⚠️  Directory does not exist: ${resolvedPath}`);
+            console.log(`  💡 Create the directory or update path in sources.json`);
             return pages;
         }
         
@@ -199,7 +199,7 @@ class ContentIndexer {
 
     // INCREMENTAL UPDATE: Update single local file without full re-index
     async updateLocalFile(filePath) {
-        console.log(`\n🔄 Updating file: ${filePath}`);
+        console.log(`\n🔄 Uppdaterar fil: ${filePath}`);
         
         // Find which source this file belongs to
         const sources = await this.loadSources();
@@ -216,7 +216,7 @@ class ContentIndexer {
         }
         
         if (!sourceMatch) {
-            console.log('  ❌ File does not belong to any known source');
+            console.log('  ❌ Filen tillhör ingen känd källa');
             return false;
         }
         
@@ -224,7 +224,7 @@ class ContentIndexer {
         const newPage = await this.indexSingleLocalFile(filePath, sourceMatch, resolvedPath);
         
         if (!newPage) {
-            console.log('  ❌ Could not index file');
+            console.log('  ❌ Kunde inte indexera filen');
             return false;
         }
         
@@ -233,10 +233,10 @@ class ContentIndexer {
         
         if (existingIndex >= 0) {
             this.index.pages[existingIndex] = newPage;
-            console.log('  ✅ File updated in index');
+            console.log('  ✅ Fil uppdaterad i index');
         } else {
             this.index.pages.push(newPage);
-            console.log('  ✅ New file added to index');
+            console.log('  ✅ Ny fil tillagd i index');
         }
         
         // Update index metadata
@@ -250,14 +250,14 @@ class ContentIndexer {
         }
         
         await this.saveIndex();
-        console.log('  💾 Index saved\n');
+        console.log('  💾 Index sparat\n');
         
         return true;
     }
 
     // INCREMENTAL DELETE: Remove deleted local file from index
     async removeLocalFile(filePath) {
-        console.log(`\n🗑️  Removing file from index: ${filePath}`);
+        console.log(`\n🗑️  Tar bort fil from index: ${filePath}`);
         
         const existingIndex = this.index.pages.findIndex(p => p.file_path === filePath);
         
@@ -276,11 +276,11 @@ class ContentIndexer {
             }
             
             await this.saveIndex();
-            console.log('  ✅ File removed from index');
-            console.log('  💾 Index saved\n');
+            console.log('  ✅ Fil borttagen from index');
+            console.log('  💾 Index sparat\n');
             return true;
         } else {
-            console.log('  ⚠️  File not found in index');
+            console.log('  ⚠️  Filen fanns inte i index');
             return false;
         }
     }
@@ -332,22 +332,22 @@ class ContentIndexer {
         }
         
         if (!title) {
-            // Fallback: extract from URL
+            // Fallback: extrahera from URL
             const urlParts = url.split('/');
             title = urlParts[urlParts.length - 1].replace(/-/g, ' ');
         }
         
-        // Clean the title
+        // Rensa titeln
         title = title
-            .replace(/\s*\|\s*.*/g, '') // Remove "| Site Name"
-            .replace(/\s*-\s*.*/g, '')  // Remove "- Site Name"
+            .replace(/\s*\|\s*.*/g, '') // Ta bort "| Site Name"
+            .replace(/\s*-\s*.*/g, '')  // Ta bort "- Site Name"
             .trim();
         
         return title || 'Untitled';
     }
 
     extractPageName(url) {
-        // Extract page name from URL
+        // Extrahera sidnamnet from URL
         const urlObj = new URL(url);
         const pathParts = urlObj.pathname.split('/').filter(p => p);
         const pageName = pathParts[pathParts.length - 1] || 'index';
@@ -440,7 +440,7 @@ class ContentIndexer {
             return pages;
         }
 
-        // Parallell crawling för snabbare indexering
+        // Parallel crawling for faster indexing
         const linkArray = Array.from(links).slice(0, 50);
         const chunkSize = 5;
         let indexed = 0;
@@ -475,7 +475,7 @@ class ContentIndexer {
             successful += validResults.length;
             
             indexed += chunk.length;
-            console.log(`  Indexed ${indexed}/${linkArray.length} pages (${successful} successful)...`);
+            console.log(`  Indexerade ${indexed}/${linkArray.length} pages (${successful} successful)...`);
             
             await new Promise(resolve => setTimeout(resolve, 100));
         }
@@ -489,7 +489,7 @@ class ContentIndexer {
         const pages = [];
 
         if (!source.pages || source.pages.length === 0) {
-            console.log('  ⚠️  No pages specified');
+            console.log('  ⚠️  Inga pages specificerade');
             return pages;
         }
 
@@ -523,11 +523,11 @@ class ContentIndexer {
             const results = await Promise.all(promises);
             pages.push(...results.filter(p => p !== null));
             
-            console.log(`  Indexed ${i + chunk.length}/${source.pages.length} pages...`);
+            console.log(`  Indexerade ${i + chunk.length}/${source.pages.length} pages...`);
             await new Promise(resolve => setTimeout(resolve, 100));
         }
 
-        console.log(`  ✅ Indexed ${pages.length} pages from ${source.name}`);
+        console.log(`  ✅ Indexerade ${pages.length} pages from ${source.name}`);
         return pages;
     }
 
@@ -536,11 +536,11 @@ class ContentIndexer {
         const pages = [];
 
         if (!source.urls || source.urls.length === 0) {
-            console.log('  ⚠️  No URLs specified');
+            console.log('  ⚠️  Inga URLs specificerade');
             return pages;
         }
 
-        console.log(`  Found ${source.urls.length} markdown files to index`);
+        console.log(`  Found ${source.urls.length} markdown-filer att indexera`);
 
         // Parallell crawling
         const chunkSize = 5;
@@ -608,12 +608,12 @@ class ContentIndexer {
             successful += validResults.length;
             
             indexed += chunk.length;
-            console.log(`  Indexed ${indexed}/${source.urls.length} files (${successful} successful)...`);
+            console.log(`  Indexerade ${indexed}/${source.urls.length} filer (${successful} successful)...`);
             
             await new Promise(resolve => setTimeout(resolve, 100));
         }
 
-        console.log(`  ✅ Indexed total ${pages.length} markdown files from ${source.name}`);
+        console.log(`  ✅ Indexed total ${pages.length} markdown-filer from ${source.name}`);
         return pages;
     }
 
@@ -636,12 +636,12 @@ class ContentIndexer {
                 } else if (source.type === 'markdown') {
                     pages = await this.indexMarkdownSource(source);
                 } else {
-                    console.log(`⚠️  Unknown source type: ${source.type} for ${source.name}`);
+                    console.log(`⚠️  Okänd källtyp: ${source.type} för ${source.name}`);
                 }
                 
                 allPages.push(...pages);
             } catch (error) {
-                console.error(`❌ Fel vid indexering av ${source.name}:`, error.message);
+                console.error(`❌ Error indexing ${source.name}:`, error.message);
             }
         }
 
@@ -653,7 +653,7 @@ class ContentIndexer {
                     const pages = await this.indexLocalSource(source);
                     allPages.push(...pages);
                 } catch (error) {
-                    console.error(`❌ Fel vid indexering av ${source.name}:`, error.message);
+                    console.error(`❌ Error indexing ${source.name}:`, error.message);
                 }
             }
         }
@@ -685,7 +685,7 @@ class ContentIndexer {
         console.log(`📊 Total indexed pages: ${allPages.length}`);
         console.log(`   🌐 Online: ${allPages.filter(p => !p.is_local).length}`);
         console.log(`   📁 Offline: ${allPages.filter(p => p.is_local).length}`);
-        console.log(`💾 Index saved in: ${this.indexPath}\n`);
+        console.log(`💾 Index saved to: ${this.indexPath}\n`);
     }
 
     async saveIndex() {
@@ -693,7 +693,7 @@ class ContentIndexer {
         const indexData = JSON.stringify(this.index, null, 2);
         const sizeKB = (indexData.length / 1024).toFixed(2);
         
-        console.log(`💾 Saving index (${sizeKB} KB)...`);
+        console.log(`💾 Sparar index (${sizeKB} KB)...`);
         
         await fs.writeFile(
             this.indexPath,
@@ -741,26 +741,26 @@ class ContentIndexer {
                 matchType = 'title_contains';
             }
             
-            // 3. PAGE NAME MATCH (from URL)
+            // 3. SIDNAMN-MATCH (from URL)
             if (pageNameLower.includes(searchTerm)) {
                 score += 30;
                 if (!matchType) matchType = 'page_name';
             }
             
-            // 4. URL MATCH (important for specific pages)
+            // 4. URL-MATCH (viktigt för specifika pages)
             if (urlLower.includes(searchTerm)) {
                 score += 20;
                 if (!matchType) matchType = 'url';
             }
             
-            // 5. CONTENT MATCH
+            // 5. INNEHÅLLS-MATCH
             const occurrences = (contentLower.match(new RegExp(searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi')) || []).length;
             if (occurrences > 0) {
                 score += occurrences * 2;
                 if (!matchType) matchType = 'content';
             }
             
-            // 6. FUZZY MATCH (for misspellings)
+            // 6. FUZZY MATCH (för felstavningar)
             if (fuzzyMatch && score === 0) {
                 const fuzzyScore = this.fuzzySearch(searchTerm, titleLower) +
                                   this.fuzzySearch(searchTerm, pageNameLower);
@@ -770,7 +770,7 @@ class ContentIndexer {
                 }
             }
             
-            // 7. BOOST FOR SHORTER TITLES (more relevant)
+            // 7. BOOST FÖR KORTARE TITLAR (mer relevanta)
             if (score > 0 && titleLower.length < 50) {
                 score += 5;
             }
@@ -868,8 +868,8 @@ if (require.main === module) {
             console.log('Usage:');
             console.log('  node indexer.js build              - Rebuild entire index');
             console.log('  node indexer.js update <filepath>  - Update a local file');
-            console.log('  node indexer.js remove <filepath>  - Remove file from index');
-            console.log('  node indexer.js search <term>      - Search the index');
+            console.log('  node indexer.js remove <filepath>  - Ta bort fil from index');
+            console.log('  node indexer.js search <term>      - Search in index');
             console.log('  node indexer.js info               - Show index information\n');
         }
     })();
