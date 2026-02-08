@@ -6,6 +6,8 @@
   "scripts": {
     "start": "node server.js",
     "index": "node indexer.js build",
+    "update": "node indexer.js update",
+    "remove": "node indexer.js remove",
     "search": "node indexer.js search",
     "info": "node indexer.js info"
   },

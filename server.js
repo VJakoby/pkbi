@@ -2,7 +2,6 @@ const express = require('express');
 const cors = require('cors');
 const fs = require('fs').promises;
 const path = require('path');
-const { marked } = require('marked');
 const ContentIndexer = require('./indexer');
 
 const app = express();
@@ -127,7 +126,9 @@ app.get('/api/preview', async (req, res) => {
         }
         
         const content = await fs.readFile(file, 'utf-8');
-        const html = marked(content);
+        
+        // Simple markdown to HTML conversion (basic)
+        const html = simpleMarkdownToHTML(content);
         
         res.json({
             title: page.title,
@@ -141,6 +142,49 @@ app.get('/api/preview', async (req, res) => {
         res.status(500).json({ error: 'Could not read file' });
     }
 });
+
+// Simple markdown to HTML converter (basic but works)
+function simpleMarkdownToHTML(markdown) {
+    let html = markdown;
+    
+    // Headers
+    html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+    html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
+    html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+    
+    // Bold
+    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/__(.*?)__/g, '<strong>$1</strong>');
+    
+    // Italic
+    html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+    html = html.replace(/_(.*?)_/g, '<em>$1</em>');
+    
+    // Code blocks
+    html = html.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
+    
+    // Inline code
+    html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+    
+    // Links
+    html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+    
+    // Line breaks
+    html = html.replace(/\n\n/g, '</p><p>');
+    html = html.replace(/\n/g, '<br>');
+    
+    // Wrap in paragraph
+    html = '<p>' + html + '</p>';
+    
+    // Clean up
+    html = html.replace(/<p><\/p>/g, '');
+    html = html.replace(/<p><h/g, '<h');
+    html = html.replace(/<\/h([1-6])><\/p>/g, '</h$1>');
+    html = html.replace(/<p><pre>/g, '<pre>');
+    html = html.replace(/<\/pre><\/p>/g, '</pre>');
+    
+    return html;
+}
 
 // API: Incremental update of local file
 app.post('/api/update-file', async (req, res) => {

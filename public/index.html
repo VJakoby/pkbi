@@ -1,248 +1,1149 @@
-﻿const express = require('express');
-const cors = require('cors');
-const fs = require('fs').promises;
-const path = require('path');
-const { marked } = require('marked');
-const ContentIndexer = require('./indexer');
-
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-app.use(cors());
-app.use(express.json());
-app.use(express.static('public'));
-
-// Initiera indexer
-const indexer = new ContentIndexer();
-let indexReady = false;
-
-// Ladda index vid start
-(async () => {
-    try {
-        await indexer.initialize();
-        const info = indexer.getIndexInfo();
-        
-        if (info.total_pages > 0) {
-            console.log(`\n✅ Index laddat med ${info.total_pages} sidor`);
-            console.log(`📅 Senast uppdaterat: ${info.last_updated || 'Aldrig'}`);
-            console.log(`📚 Källor:`);
-            info.sources.forEach(s => {
-                console.log(`   - ${s.name}: ${s.page_count} sidor`);
-            });
-            console.log();
-            indexReady = true;
-        } else {
-            console.log('\n⚠️  Index är tomt. Kör "npm run index" för att bygga indexet.\n');
+﻿<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pentest Reference Search v3.0</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-    } catch (error) {
-        console.error('❌ Fel vid laddning av index:', error.message);
-    }
-})();
 
-// API: Hämta status och källor
-app.get('/api/status', (req, res) => {
-    const info = indexer.getIndexInfo();
-    res.json({
-        ready: indexReady,
-        version: '3.0',
-        ...info
-    });
-});
-
-// API: Sök
-app.post('/api/search', (req, res) => {
-    const { query, fuzzy = true } = req.body;
-    
-    if (!indexReady) {
-        return res.status(503).json({
-            error: 'Index inte redo. Kör "npm run index" först.',
-            results: [],
-            count: 0
-        });
-    }
-    
-    if (!query || query.trim() === '') {
-        return res.json({ results: [], count: 0, query: '' });
-    }
-
-    try {
-        const startTime = Date.now();
-        const results = indexer.search(query, { fuzzy });
-        const searchTime = Date.now() - startTime;
-        
-        // Begränsa till top 50 resultat för bättre prestanda
-        const topResults = results.slice(0, 50).map(r => ({
-            source_name: r.source_name,
-            source_id: r.source_id,
-            title: r.title,
-            page_name: r.page_name,
-            url: r.url,
-            file_path: r.file_path,
-            relevance_score: r.relevance_score,
-            match_type: r.match_type,
-            snippet: r.snippet,  // Now includes {text, highlightStart, highlightLength}
-            is_local: r.is_local
-        }));
-
-        res.json({
-            results: topResults,
-            count: topResults.length,
-            total_matches: results.length,
-            query: query,
-            search_time_ms: searchTime,
-            total_searched: indexer.index.pages.length
-        });
-    } catch (error) {
-        console.error('Sökfel:', error);
-        res.status(500).json({
-            error: 'Fel vid sökning',
-            results: [],
-            count: 0
-        });
-    }
-});
-
-// API: Hämta alla källor
-app.get('/api/sources', (req, res) => {
-    const info = indexer.getIndexInfo();
-    res.json({
-        sources: info.sources || [],
-        total: info.sources?.length || 0
-    });
-});
-
-// API: Preview lokal markdown-fil
-app.get('/api/preview', async (req, res) => {
-    const { file } = req.query;
-    
-    if (!file) {
-        return res.status(400).json({ error: 'No file specified' });
-    }
-    
-    try {
-        // Security: Only allow files that are in the index
-        const page = indexer.index.pages.find(p => p.file_path === file);
-        if (!page) {
-            return res.status(404).json({ error: 'File not found in index' });
+        :root {
+            /* Dark mode (default) */
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #21262d;
+            --border-color: #30363d;
+            --text-primary: #c9d1d9;
+            --text-secondary: #8b949e;
+            --accent-blue: #58a6ff;
+            --accent-green: #238636;
+            --accent-green-hover: #2ea043;
+            --accent-purple: #8957e5;
+            --accent-red: #f85149;
+            --shadow-color: rgba(88, 166, 255, 0.1);
         }
-        
-        const content = await fs.readFile(file, 'utf-8');
-        const html = marked(content);
-        
-        res.json({
-            title: page.title,
-            page_name: page.page_name,
-            html: html,
-            raw: content,
-            file_path: file
-        });
-    } catch (error) {
-        console.error('Preview error:', error);
-        res.status(500).json({ error: 'Could not read file' });
-    }
-});
 
-// API: Incremental update of local file
-app.post('/api/update-file', async (req, res) => {
-    const { file } = req.body;
-    
-    if (!file) {
-        return res.status(400).json({ error: 'No file specified' });
-    }
-    
-    try {
-        const success = await indexer.updateLocalFile(file);
-        if (success) {
-            res.json({ 
-                success: true, 
-                message: 'File updated in index',
-                total_pages: indexer.index.pages.length
-            });
-        } else {
-            res.status(400).json({ 
-                success: false,
-                error: 'Could not update file'
-            });
+        [data-theme="light"] {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f6f8fa;
+            --bg-tertiary: #eaeef2;
+            --border-color: #d0d7de;
+            --text-primary: #24292f;
+            --text-secondary: #57606a;
+            --accent-blue: #0969da;
+            --accent-green: #1a7f37;
+            --accent-green-hover: #26a148;
+            --accent-purple: #8250df;
+            --accent-red: #cf222e;
+            --shadow-color: rgba(9, 105, 218, 0.1);
         }
-    } catch (error) {
-        console.error('Update file error:', error);
-        res.status(500).json({ error: 'Server error' });
-    }
-});
 
-// API: Remove file from index
-app.post('/api/remove-file', async (req, res) => {
-    const { file } = req.body;
-    
-    if (!file) {
-        return res.status(400).json({ error: 'No file specified' });
-    }
-    
-    try {
-        const success = await indexer.removeLocalFile(file);
-        if (success) {
-            res.json({ 
-                success: true, 
-                message: 'File removed from index',
-                total_pages: indexer.index.pages.length
-            });
-        } else {
-            res.status(404).json({ 
-                success: false,
-                error: 'File not found in index'
-            });
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
-    } catch (error) {
-        console.error('Remove file error:', error);
-        res.status(500).json({ error: 'Server error' });
-    }
-});
 
-// API: Bygg om index (async)
-app.post('/api/rebuild-index', async (req, res) => {
-    if (!indexReady) {
-        return res.status(503).json({
-            error: 'Indexering pågår redan eller kan inte startas'
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 40px 0 20px;
+            position: relative;
+        }
+
+        .theme-toggle {
+            position: absolute;
+            top: 40px;
+            right: 20px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 20px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .theme-toggle:hover {
+            background: var(--bg-tertiary);
+            transform: scale(1.05);
+        }
+
+        .theme-toggle-text {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        h1 {
+            color: var(--accent-blue);
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .version {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        /* Sources Section */
+        .sources-section {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 40px;
+        }
+
+        .sources-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .sources-header:hover {
+            opacity: 0.8;
+        }
+
+        .collapse-arrow {
+            color: var(--text-secondary);
+            font-size: 14px;
+            transition: transform 0.3s ease;
+        }
+
+        .collapse-arrow.collapsed {
+            transform: rotate(-90deg);
+        }
+
+        .sources-title {
+            color: var(--text-primary);
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sources-count {
+            background: var(--accent-blue);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .sources-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 12px;
+            max-height: 1000px;
+            overflow: hidden;
+            transition: max-height 0.3s ease, opacity 0.3s ease;
+        }
+
+        .sources-grid.collapsed {
+            max-height: 0;
+            opacity: 0;
+            margin-top: 0;
+        }
+
+        .source-card {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 14px;
+            transition: all 0.2s;
+        }
+
+        .source-card:hover {
+            border-color: var(--accent-blue);
+            transform: translateY(-2px);
+        }
+
+        .source-name {
+            color: var(--accent-blue);
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .source-type {
+            display: inline-block;
+            background: var(--accent-green);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            text-transform: uppercase;
+            margin-left: 6px;
+        }
+
+        .source-desc {
+            color: var(--text-secondary);
+            font-size: 12px;
+            margin-top: 6px;
+        }
+
+        .source-pages {
+            color: var(--text-secondary);
+            font-size: 11px;
+            margin-top: 6px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Search Box */
+        .search-box {
+            position: relative;
+            margin-bottom: 25px;
+        }
+
+        #searchInput {
+            width: 100%;
+            padding: 18px 24px;
+            font-size: 16px;
+            border: 2px solid #30363d;
+            border-radius: 10px;
+            background: #161b22;
+            color: #c9d1d9;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        #searchInput:focus {
+            border-color: #58a6ff;
+            box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.1);
+        }
+
+        .search-hint {
+            color: #8b949e;
+            font-size: 13px;
+            margin-top: 8px;
+            text-align: center;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            display: none;
+        }
+
+        .spinner {
+            border: 3px solid #30363d;
+            border-top: 3px solid #58a6ff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Results Info */
+        .results-info {
+            display: none;
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 12px 20px;
+            margin-bottom: 20px;
+        }
+
+        .results-stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .stat {
+            color: #8b949e;
+            font-size: 14px;
+        }
+
+        .stat strong {
+            color: #c9d1d9;
+        }
+
+        /* Results */
+        .results {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .result-item {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 20px;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .result-item:hover {
+            border-color: #58a6ff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(88, 166, 255, 0.15);
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+
+        .result-title-section {
+            flex: 1;
+        }
+
+        .result-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #c9d1d9;
+            margin-bottom: 4px;
+            line-height: 1.4;
+        }
+
+        .result-page-name {
+            color: #58a6ff;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .result-badges {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .badge-score {
+            background: #1f6feb;
+            color: white;
+        }
+
+        .badge-match {
+            background: #238636;
+            color: white;
+        }
+
+        .result-source {
+            color: #8b949e;
+            font-size: 13px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .result-snippet {
+            background: #0d1117;
+            border-left: 3px solid #30363d;
+            padding: 10px 12px;
+            margin: 12px 0;
+            color: #8b949e;
+            font-size: 13px;
+            line-height: 1.6;
+            border-radius: 4px;
+        }
+
+        .result-link {
+            color: #58a6ff;
+            text-decoration: none;
+            font-size: 13px;
+            word-break: break-all;
+            display: block;
+            margin-bottom: 12px;
+            opacity: 0.8;
+        }
+
+        .result-link:hover {
+            opacity: 1;
+            text-decoration: underline;
+        }
+
+        .open-btn {
+            display: inline-block;
+            background: #238636;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .open-btn:hover {
+            background: #2ea043;
+            transform: translateX(2px);
+        }
+
+        /* No Results */
+        .no-results {
+            text-align: center;
+            padding: 80px 20px;
+        }
+
+        .no-results-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .no-results-text {
+            font-size: 20px;
+            color: #8b949e;
+            margin-bottom: 10px;
+        }
+
+        .no-results-hint {
+            color: #8b949e;
+            font-size: 14px;
+        }
+
+        /* Tips */
+        .tips {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .tips-title {
+            font-size: 22px;
+            color: #c9d1d9;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        .tips-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .tip-card {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: left;
+        }
+
+        .tip-card h3 {
+            color: #58a6ff;
+            font-size: 15px;
+            margin-bottom: 10px;
+        }
+
+        .tip-examples {
+            color: #8b949e;
+            font-size: 14px;
+            line-height: 1.8;
+        }
+
+        .tip-example {
+            display: inline-block;
+            background: #0d1117;
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin: 2px;
+            font-family: 'Courier New', monospace;
+            color: #58a6ff;
+        }
+
+        /* Error */
+        .error-message {
+            background: #161b22;
+            border: 1px solid #f85149;
+            border-radius: 8px;
+            padding: 20px;
+            color: #f85149;
+            text-align: center;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2em;
+            }
+
+            .sources-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .result-header {
+                flex-direction: column;
+            }
+
+            .tips-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Markdown Preview Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            animation: fadeIn 0.2s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: #0d1117;
+            margin: 2% auto;
+            padding: 0;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 1200px;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-header {
+            padding: 20px 30px;
+            border-bottom: 1px solid #30363d;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #c9d1d9;
+        }
+
+        .modal-subtitle {
+            font-size: 14px;
+            color: #8b949e;
+            margin-top: 4px;
+        }
+
+        .modal-close {
+            background: #161b22;
+            border: 1px solid #30363d;
+            color: #c9d1d9;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .modal-close:hover {
+            background: #30363d;
+        }
+
+        .modal-body {
+            padding: 30px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .modal-footer {
+            padding: 20px 30px;
+            border-top: 1px solid #30363d;
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .modal-btn {
+            padding: 10px 20px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .modal-btn-primary {
+            background: #238636;
+            color: white;
+        }
+
+        .modal-btn-primary:hover {
+            background: #2ea043;
+        }
+
+        .modal-btn-secondary {
+            background: #161b22;
+            border: 1px solid #30363d;
+            color: #c9d1d9;
+        }
+
+        .modal-btn-secondary:hover {
+            background: #30363d;
+        }
+
+        /* Markdown Content Styling */
+        .markdown-content {
+            color: #c9d1d9;
+            line-height: 1.6;
+        }
+
+        .markdown-content h1 {
+            color: #58a6ff;
+            font-size: 2em;
+            margin-top: 24px;
+            margin-bottom: 16px;
+            border-bottom: 1px solid #30363d;
+            padding-bottom: 8px;
+        }
+
+        .markdown-content h2 {
+            color: #58a6ff;
+            font-size: 1.5em;
+            margin-top: 24px;
+            margin-bottom: 16px;
+        }
+
+        .markdown-content h3 {
+            color: #58a6ff;
+            font-size: 1.25em;
+            margin-top: 16px;
+            margin-bottom: 8px;
+        }
+
+        .markdown-content p {
+            margin-bottom: 16px;
+        }
+
+        .markdown-content code {
+            background: #161b22;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #f85149;
+        }
+
+        .markdown-content pre {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 16px;
+            overflow-x: auto;
+            margin-bottom: 16px;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+            color: #c9d1d9;
+        }
+
+        .markdown-content ul, .markdown-content ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+        }
+
+        .markdown-content li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #30363d;
+            padding-left: 16px;
+            margin: 16px 0;
+            color: #8b949e;
+        }
+
+        .markdown-content a {
+            color: #58a6ff;
+            text-decoration: none;
+        }
+
+        .markdown-content a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-bottom: 16px;
+        }
+
+        .markdown-content th, .markdown-content td {
+            border: 1px solid #30363d;
+            padding: 8px 12px;
+            text-align: left;
+        }
+
+        .markdown-content th {
+            background: #161b22;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 Pentest Reference Search</h1>
+            <div class="version">v3.0 - Optimerad & Förbättrad</div>
+        </div>
+
+        <!-- Search -->
+        <div class="search-box">
+            <input 
+                type="text" 
+                id="searchInput" 
+                placeholder="Sök efter vad som helst... (t.ex. 'kerberos', 'windows enumeration', 'sql injection')"
+                autocomplete="off"
+            >
+            <div class="search-hint">💡 Tips: Prova felstavningar - fuzzy search hittar ändå rätt!</div>
+        </div>
+
+        <!-- Loading -->
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p style="color: #8b949e;">Söker...</p>
+        </div>
+
+        <!-- Results Info -->
+        <div class="results-info" id="resultsInfo">
+            <div class="results-stats">
+                <span class="stat" id="resultsCount"></span>
+                <span class="stat" id="searchStats"></span>
+            </div>
+        </div>
+
+        <!-- Results -->
+        <div class="results" id="results"></div>
+
+        <!-- Tips (shown when no search) -->
+        <div class="tips" id="tips">
+            <div class="tips-title">💡 Exempel på sökningar</div>
+            <div class="tips-grid">
+                <div class="tip-card">
+                    <h3>🔐 Tjänster & Protokoll</h3>
+                    <div class="tip-examples">
+                        <span class="tip-example">ssh</span>
+                        <span class="tip-example">kerberos</span>
+                        <span class="tip-example">postgres</span>
+                        <span class="tip-example">smb</span>
+                        <span class="tip-example">ldap</span>
+                    </div>
+                </div>
+                <div class="tip-card">
+                    <h3>🌐 Webb-sårbarheter</h3>
+                    <div class="tip-examples">
+                        <span class="tip-example">sql injection</span>
+                        <span class="tip-example">xss</span>
+                        <span class="tip-example">csrf</span>
+                        <span class="tip-example">xxe</span>
+                        <span class="tip-example">ssrf</span>
+                    </div>
+                </div>
+                <div class="tip-card">
+                    <h3>💻 Operativsystem</h3>
+                    <div class="tip-examples">
+                        <span class="tip-example">windows enum</span>
+                        <span class="tip-example">linux privesc</span>
+                        <span class="tip-example">active directory</span>
+                    </div>
+                </div>
+                <div class="tip-card">
+                    <h3>🛠️ Verktyg</h3>
+                    <div class="tip-examples">
+                        <span class="tip-example">nmap</span>
+                        <span class="tip-example">metasploit</span>
+                        <span class="tip-example">burp</span>
+                        <span class="tip-example">john</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sources Section (moved to bottom) -->
+        <div class="sources-section" id="sourcesSection">
+            <div class="sources-header" onclick="toggleSources()">
+                <div class="sources-title">
+                    📚 Indexerade Källor
+                    <span class="sources-count" id="sourcesCount">Laddar...</span>
+                </div>
+                <div class="collapse-arrow" id="collapseArrow">▼</div>
+            </div>
+            <div class="sources-grid" id="sourcesGrid">
+                <!-- Sources loaded dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Markdown Preview Modal -->
+    <div id="previewModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <div class="modal-title" id="modalTitle">Loading...</div>
+                    <div class="modal-subtitle" id="modalSubtitle"></div>
+                </div>
+                <button class="modal-close" onclick="closePreview()">✕ Stäng</button>
+            </div>
+            <div class="modal-body">
+                <div class="markdown-content" id="modalContent">
+                    <p style="text-align: center; color: #8b949e;">Laddar...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn modal-btn-secondary" onclick="copyFilePath()">📋 Kopiera sökväg</button>
+                <button class="modal-btn modal-btn-primary" onclick="closePreview()">Stäng</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const searchInput = document.getElementById('searchInput');
+        const resultsDiv = document.getElementById('results');
+        const loadingDiv = document.getElementById('loading');
+        const resultsInfo = document.getElementById('resultsInfo');
+        const tipsDiv = document.getElementById('tips');
+        const sourcesSection = document.getElementById('sourcesSection');
+        const sourcesGrid = document.getElementById('sourcesGrid');
+        const sourcesCount = document.getElementById('sourcesCount');
+        const resultsCount = document.getElementById('resultsCount');
+        const searchStats = document.getElementById('searchStats');
+        const collapseArrow = document.getElementById('collapseArrow');
+        
+        let searchTimeout;
+        let sourcesCollapsed = false;
+        let currentFilePath = null;
+
+        // Theme management (if exists)
+        // ... existing theme code ...
+
+        // Toggle sources collapse
+        function toggleSources() {
+            sourcesCollapsed = !sourcesCollapsed;
+            if (sourcesCollapsed) {
+                sourcesGrid.classList.add('collapsed');
+                collapseArrow.classList.add('collapsed');
+            } else {
+                sourcesGrid.classList.remove('collapsed');
+                collapseArrow.classList.remove('collapsed');
+            }
+        }
+
+        // Preview modal functions
+        async function openPreview(filePath, title, pageName) {
+            currentFilePath = filePath;
+            const modal = document.getElementById('previewModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalSubtitle = document.getElementById('modalSubtitle');
+            const modalContent = document.getElementById('modalContent');
+            
+            modal.style.display = 'block';
+            modalTitle.textContent = title;
+            modalSubtitle.textContent = `📁 ${pageName}`;
+            modalContent.innerHTML = '<p style="text-align: center; color: #8b949e;">Laddar...</p>';
+            
+            try {
+                const response = await fetch(`/api/preview?file=${encodeURIComponent(filePath)}`);
+                const data = await response.json();
+                
+                if (data.error) {
+                    modalContent.innerHTML = `<p style="color: #f85149;">Error: ${data.error}</p>`;
+                } else {
+                    modalContent.innerHTML = data.html;
+                }
+            } catch (error) {
+                modalContent.innerHTML = `<p style="color: #f85149;">Could not load file preview</p>`;
+            }
+        }
+
+        function closePreview() {
+            document.getElementById('previewModal').style.display = 'none';
+            currentFilePath = null;
+        }
+
+        function copyFilePath() {
+            if (currentFilePath) {
+                navigator.clipboard.writeText(currentFilePath);
+                alert('📋 Sökväg kopierad till urklipp!');
+            }
+        }
+
+        // Close modal on background click
+        window.onclick = function(event) {
+            const modal = document.getElementById('previewModal');
+            if (event.target === modal) {
+                closePreview();
+            }
+        };
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closePreview();
+            }
         });
-    }
 
-    try {
-        console.log('🔄 Startar ombyggnad av index...');
-        res.json({ message: 'Indexering startad i bakgrunden' });
-        
-        indexReady = false;
-        await indexer.buildIndex();
-        indexReady = true;
-        
-        console.log('✅ Index ombyggt!');
-    } catch (error) {
-        console.error('❌ Fel vid ombyggnad:', error);
-        indexReady = true; // Återställ status
-    }
-});
+        // Load sources on page load
+        async function loadSources() {
+            try {
+                const response = await fetch('/api/sources');
+                const data = await response.json();
+                
+                if (data.sources && data.sources.length > 0) {
+                    sourcesCount.textContent = `${data.total} källor`;
+                    
+                    sourcesGrid.innerHTML = data.sources.map(source => `
+                        <div class="source-card">
+                            <div class="source-name">
+                                ${escapeHtml(source.name)}
+                                <span class="source-type">${source.type}</span>
+                            </div>
+                            ${source.description ? `<div class="source-desc">${escapeHtml(source.description)}</div>` : ''}
+                            <div class="source-pages">
+                                📄 ${source.page_count} sidor indexerade
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    sourcesSection.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Kunde inte ladda källor:', error);
+                sourcesSection.style.display = 'none';
+            }
+        }
 
-// Health check
-app.get('/health', (req, res) => {
-    res.json({
-        status: 'ok',
-        index_ready: indexReady,
-        uptime: process.uptime()
-    });
-});
+        loadSources();
 
-app.listen(PORT, () => {
-    console.log(`\n✅ Pentest Reference Search v3.0`);
-    console.log(`🌐 Server körs på http://localhost:${PORT}`);
-    console.log(`📂 Öppna http://localhost:${PORT} i din webbläsare\n`);
-    
-    if (!indexReady) {
-        console.log('⚠️  OBS: Index är inte redo!');
-        console.log('   Kör: npm run index\n');
-    }
-});
+        // Search functionality
+        searchInput.addEventListener('input', (e) => {
+            clearTimeout(searchTimeout);
+            const query = e.target.value.trim();
 
-// Graceful shutdown
-process.on('SIGTERM', () => {
-    console.log('\n🛑 Stänger ner servern...');
-    process.exit(0);
-});
+            if (query.length === 0) {
+                resultsDiv.innerHTML = '';
+                resultsInfo.style.display = 'none';
+                tipsDiv.style.display = 'block';
+                sourcesSection.style.display = 'block';
+                return;
+            }
+
+            tipsDiv.style.display = 'none';
+
+            searchTimeout = setTimeout(() => {
+                performSearch(query);
+            }, 400);
+        });
+
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                clearTimeout(searchTimeout);
+                const query = e.target.value.trim();
+                if (query.length > 0) {
+                    performSearch(query);
+                }
+            }
+        });
+
+        async function performSearch(query) {
+            loadingDiv.style.display = 'block';
+            resultsDiv.innerHTML = '';
+            resultsInfo.style.display = 'none';
+
+            try {
+                const response = await fetch('/api/search', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ query, fuzzy: true })
+                });
+
+                const data = await response.json();
+                loadingDiv.style.display = 'none';
+
+                if (data.error) {
+                    resultsDiv.innerHTML = `
+                        <div class="error-message">
+                            <h3>${data.error}</h3>
+                            <p style="margin-top: 10px;">Kör: <code>npm run index</code></p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                if (data.count === 0) {
+                    resultsDiv.innerHTML = `
+                        <div class="no-results">
+                            <div class="no-results-icon">🔍</div>
+                            <div class="no-results-text">0 resultat hittades</div>
+                            <div class="no-results-hint">Prova en annan sökterm eller kontrollera stavningen</div>
+                        </div>
+                    `;
+                } else {
+                    resultsInfo.style.display = 'block';
+                    resultsCount.innerHTML = `<strong>${data.count}</strong> resultat för "<strong>${escapeHtml(query)}</strong>"`;
+                    searchStats.textContent = `Sökte igenom ${data.total_searched} sidor på ${data.search_time_ms}ms`;
+                    
+                    displayResults(data.results);
+                }
+            } catch (error) {
+                loadingDiv.style.display = 'none';
+                resultsDiv.innerHTML = `
+                    <div class="error-message">
+                        <h3>❌ Anslutningsfel</h3>
+                        <p style="margin-top: 10px;">Kontrollera att servern körs: <code>npm start</code></p>
+                    </div>
+                `;
+            }
+        }
+
+        function displayResults(results) {
+            resultsDiv.innerHTML = results.map(result => {
+                const isLocal = result.url && result.url.startsWith('file://');
+                const localBadge = isLocal ? '<span class="badge" style="background: var(--accent-purple);">📁 Lokal</span>' : '';
+                
+                // For local files, use preview; for online, use direct link
+                const openAction = isLocal 
+                    ? `onclick="openPreview('${escapeHtml(result.file_path || result.url.replace('file://', ''))}', '${escapeHtml(result.title)}', '${escapeHtml(result.page_name)}')" style="cursor: pointer;"`
+                    : `href="${result.url}" target="_blank"`;
+                
+                const openButton = isLocal
+                    ? `<button class="open-btn" onclick="openPreview('${escapeHtml(result.file_path || result.url.replace('file://', ''))}', '${escapeHtml(result.title)}', '${escapeHtml(result.page_name)}')">👁️ Förhandsgranska</button>`
+                    : `<a href="${result.url}" class="open-btn" target="_blank">Öppna sida →</a>`;
+                
+                // Highlight snippet if available
+                let snippetHTML = '';
+                if (result.snippet) {
+                    // Handle both old string format and new object format
+                    if (typeof result.snippet === 'string') {
+                        // Old format: just a string
+                        snippetHTML = `<div class="result-snippet">${escapeHtml(result.snippet)}</div>`;
+                    } else if (result.snippet.text) {
+                        // New format: object with highlight metadata
+                        const snippet = result.snippet;
+                        if (snippet.highlightStart >= 0 && snippet.highlightLength > 0) {
+                            const before = escapeHtml(snippet.text.substring(0, snippet.highlightStart));
+                            const highlight = escapeHtml(snippet.text.substring(snippet.highlightStart, snippet.highlightStart + snippet.highlightLength));
+                            const after = escapeHtml(snippet.text.substring(snippet.highlightStart + snippet.highlightLength));
+                            snippetHTML = `<div class="result-snippet">${before}<mark style="background: rgba(88, 166, 255, 0.3); color: #58a6ff; font-weight: 600; padding: 2px 4px; border-radius: 3px;">${highlight}</mark>${after}</div>`;
+                        } else {
+                            snippetHTML = `<div class="result-snippet">${escapeHtml(snippet.text)}</div>`;
+                        }
+                    }
+                }
+                
+                return `
+                <div class="result-item">
+                    <div class="result-header">
+                        <div class="result-title-section">
+                            <div class="result-title">${escapeHtml(result.title)}</div>
+                            <div class="result-page-name">📄 ${escapeHtml(result.page_name)}</div>
+                        </div>
+                        <div class="result-badges">
+                            ${localBadge}
+                            <span class="badge badge-score">${result.relevance_score}</span>
+                            <span class="badge badge-match">${formatMatchType(result.match_type)}</span>
+                        </div>
+                    </div>
+                    <div class="result-source">
+                        📚 ${escapeHtml(result.source_name)}
+                    </div>
+                    ${snippetHTML}
+                    ${isLocal ? `
+                        <div class="result-link" style="color: var(--text-secondary); cursor: default;">
+                            📁 ${escapeHtml(result.file_path || result.url.replace('file://', ''))}
+                        </div>
+                    ` : `
+                        <a href="${result.url}" class="result-link" target="_blank">${result.url}</a>
+                    `}
+                    ${openButton}
+                </div>
+            `}).join('');
+        }
+
+        function formatMatchType(type) {
+            const types = {
+                'exact_title': '🎯 Exakt',
+                'title_contains': '📌 Titel',
+                'page_name': '📄 Sidnamn',
+                'url': '🔗 URL',
+                'content': '📝 Innehåll',
+                'fuzzy': '🔍 Fuzzy'
+            };
+            return types[type] || type;
+        }
+
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        // Focus search on load
+        window.addEventListener('load', () => {
+            searchInput.focus();
+        });
+
+        // Show/hide tips based on search input
+        searchInput.addEventListener('focus', () => {
+            if (!searchInput.value) {
+                tipsDiv.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
