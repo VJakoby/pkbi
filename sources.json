@@ -32,6 +32,7 @@
       "search_url": "https://viperone.gitbook.io/pentest-everything/?q={query}",
       "index_url": "https://viperone.gitbook.io/pentest-everything",
       "enabled": true,
+      "cache_offline": true,
       "description": "Comprehensive pentest knowledge base"
     },
     {

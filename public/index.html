@@ -1,5 +1,5 @@
 ﻿<!DOCTYPE html>
-<html lang="en">
+<html lang="sv">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -908,6 +908,45 @@
             currentFilePath = null;
         }
 
+        async function openCachedPage(sourceId, url, title) {
+            currentFilePath = null;
+            const modal = document.getElementById('previewModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalSubtitle = document.getElementById('modalSubtitle');
+            const modalContent = document.getElementById('modalContent');
+            
+            modal.style.display = 'block';
+            modalTitle.textContent = title + ' (Offline)';
+            modalSubtitle.textContent = `📱 Cached from ${sourceId}`;
+            modalContent.innerHTML = '<p style="text-align: center; color: #8b949e;">Loading cached page...</p>';
+            
+            try {
+                const response = await fetch(`/api/cached-page?source_id=${encodeURIComponent(sourceId)}&url=${encodeURIComponent(url)}`);
+                const data = await response.json();
+                
+                if (data.error) {
+                    modalContent.innerHTML = `
+                        <div style="text-align: center; padding: 40px;">
+                            <p style="color: #f85149; font-size: 18px; margin-bottom: 16px;">❌ ${data.error}</p>
+                            <p style="color: #8b949e;">${data.message || ''}</p>
+                            <br>
+                            <a href="${url}" target="_blank" class="open-btn">🌐 Open online instead</a>
+                        </div>
+                    `;
+                } else {
+                    modalContent.innerHTML = data.html;
+                }
+            } catch (error) {
+                modalContent.innerHTML = `
+                    <div style="text-align: center; padding: 40px;">
+                        <p style="color: #f85149;">Could not load cached page</p>
+                        <br>
+                        <a href="${url}" target="_blank" class="open-btn">🌐 Open online instead</a>
+                    </div>
+                `;
+            }
+        }
+
         function copyFilePath() {
             if (currentFilePath) {
                 navigator.clipboard.writeText(currentFilePath);
@@ -1048,16 +1087,29 @@
         function displayResults(results) {
             resultsDiv.innerHTML = results.map(result => {
                 const isLocal = result.url && result.url.startsWith('file://');
-                const localBadge = isLocal ? '<span class="badge" style="background: var(--accent-purple);">📁 Lokal</span>' : '';
+                const isCached = result.is_cached === true || result.cache_hash; // Has cached version
                 
-                // For local files, use preview; for online, use direct link
-                const openAction = isLocal 
-                    ? `onclick="openPreview('${escapeHtml(result.file_path || result.url.replace('file://', ''))}', '${escapeHtml(result.title)}', '${escapeHtml(result.page_name)}')" style="cursor: pointer;"`
-                    : `href="${result.url}" target="_blank"`;
+                let badge = '';
+                if (isLocal) {
+                    badge = '<span class="badge" style="background: var(--accent-purple);">📁 Local</span>';
+                } else if (isCached) {
+                    badge = '<span class="badge" style="background: var(--accent-green);">📱 Cached</span>';
+                }
                 
-                const openButton = isLocal
-                    ? `<button class="open-btn" onclick="openPreview('${escapeHtml(result.file_path || result.url.replace('file://', ''))}', '${escapeHtml(result.title)}', '${escapeHtml(result.page_name)}')">👁️ Preview</button>`
-                    : `<a href="${result.url}" class="open-btn" target="_blank">Open page →</a>`;
+                // Determine button based on file type
+                let openButton;
+                if (isLocal) {
+                    openButton = `<button class="open-btn" onclick="openPreview('${escapeHtml(result.file_path || result.url.replace('file://', ''))}', '${escapeHtml(result.title)}', '${escapeHtml(result.page_name)}')">👁️ Preview</button>`;
+                } else if (isCached) {
+                    openButton = `
+                        <button class="open-btn" onclick="openCachedPage('${escapeHtml(result.source_id)}', '${escapeHtml(result.url)}', '${escapeHtml(result.title)}')">
+                            📱 Offline Preview
+                        </button>
+                        <a href="${result.url}" class="open-btn" style="background: #30363d; margin-left: 8px;" target="_blank">🌐 Online</a>
+                    `;
+                } else {
+                    openButton = `<a href="${result.url}" class="open-btn" target="_blank">Open page →</a>`;
+                }
                 
                 // Highlight snippet if available
                 let snippetHTML = '';
@@ -1088,7 +1140,7 @@
                             <div class="result-page-name">📄 ${escapeHtml(result.page_name)}</div>
                         </div>
                         <div class="result-badges">
-                            ${localBadge}
+                            ${badge}
                             <span class="badge badge-score">${result.relevance_score}</span>
                             <span class="badge badge-match">${formatMatchType(result.match_type)}</span>
                         </div>
