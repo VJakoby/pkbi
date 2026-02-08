@@ -737,7 +737,7 @@ class ContentIndexer {
             }
             // 2. TITEL INNEHÅLLER SÖKTERM
             else if (titleLower.includes(searchTerm)) {
-                score += 50;
+                score += 100;
                 matchType = 'title_contains';
             }
             
@@ -749,14 +749,14 @@ class ContentIndexer {
             
             // 4. URL-MATCH (viktigt för specifika pages)
             if (urlLower.includes(searchTerm)) {
-                score += 20;
+                score += 10;
                 if (!matchType) matchType = 'url';
             }
             
             // 5. INNEHÅLLS-MATCH
             const occurrences = (contentLower.match(new RegExp(searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi')) || []).length;
             if (occurrences > 0) {
-                score += occurrences * 2;
+                score += occurrences * 1;
                 if (!matchType) matchType = 'content';
             }
             
