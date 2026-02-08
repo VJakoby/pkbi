@@ -242,66 +242,26 @@ app.post('/api/remove-file', async (req, res) => {
     }
 });
 
-// API: Get cached page (for offline preview)
-app.get('/api/cached-page', async (req, res) => {
-    const { source_id, url } = req.query;
-    
-    if (!source_id || !url) {
-        return res.status(400).json({ error: 'Missing parameters' });
-    }
-    
-    try {
-        const crypto = require('crypto');
-        const hash = crypto.createHash('md5').update(url).digest('hex');
-        const cachePath = path.join(__dirname, 'data', 'cache', 'online', source_id, `${hash}.html`);
-        
-        const html = await fs.readFile(cachePath, 'utf-8');
-        
-        res.json({
-            html: html,
-            cached: true,
-            source_id: source_id,
-            url: url
-        });
-    } catch (error) {
-        res.status(404).json({ 
-            error: 'Page not cached',
-            message: 'Run: npm run cache to cache offline pages' 
-        });
-    }
-});
-
-// API: Get cache status
-app.get('/api/cache-status', async (req, res) => {
-    try {
-        const status = await indexer.getCacheStatus();
-        res.json({ sources: status });
-    } catch (error) {
-        console.error('Cache status error:', error);
-        res.json({ sources: [] });
-    }
-});
-
 // API: Bygg om index (async)
 app.post('/api/rebuild-index', async (req, res) => {
     if (!indexReady) {
         return res.status(503).json({
-            error: 'Indexering pågår redan eller kan inte startas'
+            error: 'Indexing already running or can not be started'
         });
     }
 
     try {
-        console.log('🔄 Startar ombyggnad av index...');
-        res.json({ message: 'Indexering startad i bakgrunden' });
+        console.log('🔄 Starting rebuilding of index...');
+        res.json({ message: 'Indexing started in the background' });
         
         indexReady = false;
         await indexer.buildIndex();
         indexReady = true;
         
-        console.log('✅ Index ombyggt!');
+        console.log('✅ Index rebuilt!');
     } catch (error) {
-        console.error('❌ Fel vid ombyggnad:', error);
-        indexReady = true; // Återställ status
+        console.error('❌ Error during index rebuilding:', error);
+        indexReady = true; // Reset status
     }
 });
 
@@ -315,18 +275,18 @@ app.get('/health', (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`\n✅ PRS Server started`);
-    console.log(`🌐 Server körs på http://localhost:${PORT}`);
-    console.log(`📂 Öppna http://localhost:${PORT} i din webbläsare\n`);
+    console.log(`\n✅ PRS Server`);
+    console.log(`🌐 The server is running on: http://localhost:${PORT}`);
+    console.log(`📂 Open http://localhost:${PORT} in your web browser\n`);
     
     if (!indexReady) {
-        console.log('⚠️  OBS: Index är inte redo!');
-        console.log('   Kör: npm run index\n');
+        console.log('⚠️  OBS: Index is not ready!');
+        console.log('   Run: npm run index\n');
     }
 });
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
-    console.log('\n🛑 Stänger ner servern...');
+    console.log('\n🛑 Stopping the server...');
     process.exit(0);
 });
