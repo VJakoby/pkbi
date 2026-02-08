@@ -1,8 +1,9 @@
 # 🔍 Pentesting Reference Search (PRS)
 
 A fast local search tool for pentesting documentation.
-Works with online docs or local markdown files.
 
+Works with online docs or local markdown files.
+ 
 Idea by me, implemented with help from Claude.
 
 ## ✨ Features
@@ -43,7 +44,7 @@ Supports:
 - Offline: Local markdown files
 
 ### Add a source
-1. Edit sources.json
+1. Edit `sources.json`
 2. Add an online or offline source
 3. Run the indexer
 4. Restart the server
