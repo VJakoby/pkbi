@@ -11,30 +11,30 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
-// Initiera indexer
+// Initialize indexer
 const indexer = new ContentIndexer();
 let indexReady = false;
 
-// Ladda index vid start
+// Load index on startup
 (async () => {
     try {
         await indexer.initialize();
         const info = indexer.getIndexInfo();
         
         if (info.total_pages > 0) {
-            console.log(`\n✅ Index laddat med ${info.total_pages} sidor`);
-            console.log(`📅 Senast uppdaterat: ${info.last_updated || 'Aldrig'}`);
-            console.log(`📚 Källor:`);
+            console.log(`\n✅ Index loaded with ${info.total_pages} pages`);
+            console.log(`📅 Last updated: ${info.last_updated || 'Never'}`);
+            console.log(`📚 Sources:`);
             info.sources.forEach(s => {
-                console.log(`   - ${s.name}: ${s.page_count} sidor`);
+                console.log(`   - ${s.name}: ${s.page_count} pages`);
             });
             console.log();
             indexReady = true;
         } else {
-            console.log('\n⚠️  Index är tomt. Kör "npm run index" för att bygga indexet.\n');
+            console.log('\n⚠️  Index is empty. Run "npm run index" to build the index.\n');
         }
     } catch (error) {
-        console.error('❌ Fel vid laddning av index:', error.message);
+        console.error('❌ Error loading index:', error.message);
     }
 })();
 
@@ -54,7 +54,7 @@ app.post('/api/search', (req, res) => {
     
     if (!indexReady) {
         return res.status(503).json({
-            error: 'Index inte redo. Kör "npm run index" först.',
+            error: 'Index not ready. Run "npm run index" first.',
             results: [],
             count: 0
         });
@@ -92,9 +92,9 @@ app.post('/api/search', (req, res) => {
             total_searched: indexer.index.pages.length
         });
     } catch (error) {
-        console.error('Sökfel:', error);
+        console.error('Search error:', error);
         res.status(500).json({
-            error: 'Fel vid sökning',
+            error: 'Search error',
             results: [],
             count: 0
         });
@@ -242,25 +242,25 @@ app.post('/api/remove-file', async (req, res) => {
     }
 });
 
-// API: Bygg om index (async)
+// API: Rebuild index (async)
 app.post('/api/rebuild-index', async (req, res) => {
     if (!indexReady) {
         return res.status(503).json({
-            error: 'Indexering pågår redan eller kan inte startas'
+            error: 'Indexing already in progress or cannot be started'
         });
     }
 
     try {
-        console.log('🔄 Startar ombyggnad av index...');
-        res.json({ message: 'Indexering startad i bakgrunden' });
+        console.log('🔄 Starting index rebuild...');
+        res.json({ message: 'Indexing started in the background' });
         
         indexReady = false;
         await indexer.buildIndex();
         indexReady = true;
         
-        console.log('✅ Index ombyggt!');
+        console.log('✅ Index rebuilt!');
     } catch (error) {
-        console.error('❌ Fel vid ombyggnad:', error);
+        console.error('❌ Error rebuilding:', error);
         indexReady = true; // Återställ status
     }
 });
@@ -275,18 +275,18 @@ app.get('/health', (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`\n✅ Pentest Reference Search v3.0`);
-    console.log(`🌐 Server körs på http://localhost:${PORT}`);
-    console.log(`📂 Öppna http://localhost:${PORT} i din webbläsare\n`);
+    console.log(`\n✅ Pentest Reference Search (PRS)`);
+    console.log(`🌐 Server running on http://localhost:${PORT}`);
+    console.log(`📂 Open http://localhost:${PORT} in your browser\n`);
     
     if (!indexReady) {
-        console.log('⚠️  OBS: Index är inte redo!');
-        console.log('   Kör: npm run index\n');
+        console.log('⚠️  WARNING: Index is not ready!');
+        console.log('   Run: npm run index\n');
     }
 });
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
-    console.log('\n🛑 Stänger ner servern...');
+    console.log('\n🛑 Shutting down server...');
     process.exit(0);
 });

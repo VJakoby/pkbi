@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pentest Reference Search v3.0</title>
+    <title>Pentest Reference Search (PRS))</title>
     <style>
         * {
             margin: 0;
@@ -732,8 +732,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🔍 Pentest Reference Search</h1>
-            <div class="version">v3.0 - Optimerad & Förbättrad</div>
+            <h1>🔍 Pentest Reference Search (PRS)</h1>
         </div>
 
         <!-- Search -->
@@ -741,16 +740,16 @@
             <input 
                 type="text" 
                 id="searchInput" 
-                placeholder="Sök efter vad som helst... (t.ex. 'kerberos', 'windows enumeration', 'sql injection')"
+                placeholder="Search for anything... (e.g. 'kerberos', 'windows enumeration', 'sql injection')"
                 autocomplete="off"
             >
-            <div class="search-hint">💡 Tips: Prova felstavningar - fuzzy search hittar ändå rätt!</div>
+            <div class="search-hint">💡 Tip: Try misspellings - fuzzy search finds the right result anyway!</div>
         </div>
 
         <!-- Loading -->
         <div class="loading" id="loading">
             <div class="spinner"></div>
-            <p style="color: #8b949e;">Söker...</p>
+            <p style="color: #8b949e;">Searching...</p>
         </div>
 
         <!-- Results Info -->
@@ -766,10 +765,10 @@
 
         <!-- Tips (shown when no search) -->
         <div class="tips" id="tips">
-            <div class="tips-title">💡 Exempel på sökningar</div>
+            <div class="tips-title">💡 Search Examples</div>
             <div class="tips-grid">
                 <div class="tip-card">
-                    <h3>🔐 Tjänster & Protokoll</h3>
+                    <h3>🔐 Services & Protocols</h3>
                     <div class="tip-examples">
                         <span class="tip-example">ssh</span>
                         <span class="tip-example">kerberos</span>
@@ -779,7 +778,7 @@
                     </div>
                 </div>
                 <div class="tip-card">
-                    <h3>🌐 Webb-sårbarheter</h3>
+                    <h3>🌐 Web Vulnerabilities</h3>
                     <div class="tip-examples">
                         <span class="tip-example">sql injection</span>
                         <span class="tip-example">xss</span>
@@ -789,7 +788,7 @@
                     </div>
                 </div>
                 <div class="tip-card">
-                    <h3>💻 Operativsystem</h3>
+                    <h3>💻 Operating Systems</h3>
                     <div class="tip-examples">
                         <span class="tip-example">windows enum</span>
                         <span class="tip-example">linux privesc</span>
@@ -797,7 +796,7 @@
                     </div>
                 </div>
                 <div class="tip-card">
-                    <h3>🛠️ Verktyg</h3>
+                    <h3>🛠️ Tools</h3>
                     <div class="tip-examples">
                         <span class="tip-example">nmap</span>
                         <span class="tip-example">metasploit</span>
@@ -812,8 +811,8 @@
         <div class="sources-section" id="sourcesSection">
             <div class="sources-header" onclick="toggleSources()">
                 <div class="sources-title">
-                    📚 Indexerade Källor
-                    <span class="sources-count" id="sourcesCount">Laddar...</span>
+                    📚 Indexed Sources
+                    <span class="sources-count" id="sourcesCount">Loading...</span>
                 </div>
                 <div class="collapse-arrow" id="collapseArrow">▼</div>
             </div>
@@ -831,16 +830,16 @@
                     <div class="modal-title" id="modalTitle">Loading...</div>
                     <div class="modal-subtitle" id="modalSubtitle"></div>
                 </div>
-                <button class="modal-close" onclick="closePreview()">✕ Stäng</button>
+                <button class="modal-close" onclick="closePreview()">✕ Close</button>
             </div>
             <div class="modal-body">
                 <div class="markdown-content" id="modalContent">
-                    <p style="text-align: center; color: #8b949e;">Laddar...</p>
+                    <p style="text-align: center; color: #8b949e;">Loading...</p>
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="modal-btn modal-btn-secondary" onclick="copyFilePath()">📋 Kopiera sökväg</button>
-                <button class="modal-btn modal-btn-primary" onclick="closePreview()">Stäng</button>
+                <button class="modal-btn modal-btn-secondary" onclick="copyFilePath()">📋 Copy path</button>
+                <button class="modal-btn modal-btn-primary" onclick="closePreview()">Close</button>
             </div>
         </div>
     </div>
@@ -888,7 +887,7 @@
             modal.style.display = 'block';
             modalTitle.textContent = title;
             modalSubtitle.textContent = `📁 ${pageName}`;
-            modalContent.innerHTML = '<p style="text-align: center; color: #8b949e;">Laddar...</p>';
+            modalContent.innerHTML = '<p style="text-align: center; color: #8b949e;">Loading...</p>';
             
             try {
                 const response = await fetch(`/api/preview?file=${encodeURIComponent(filePath)}`);
@@ -912,7 +911,7 @@
         function copyFilePath() {
             if (currentFilePath) {
                 navigator.clipboard.writeText(currentFilePath);
-                alert('📋 Sökväg kopierad till urklipp!');
+                alert('📋 Path copied to clipboard!');
             }
         }
 
@@ -938,7 +937,7 @@
                 const data = await response.json();
                 
                 if (data.sources && data.sources.length > 0) {
-                    sourcesCount.textContent = `${data.total} källor`;
+                    sourcesCount.textContent = `${data.total} sources`;
                     
                     sourcesGrid.innerHTML = data.sources.map(source => `
                         <div class="source-card">
@@ -948,7 +947,7 @@
                             </div>
                             ${source.description ? `<div class="source-desc">${escapeHtml(source.description)}</div>` : ''}
                             <div class="source-pages">
-                                📄 ${source.page_count} sidor indexerade
+                                📄 ${source.page_count} pages indexed
                             </div>
                         </div>
                     `).join('');
@@ -956,7 +955,7 @@
                     sourcesSection.style.display = 'none';
                 }
             } catch (error) {
-                console.error('Kunde inte ladda källor:', error);
+                console.error('Could not load sources:', error);
                 sourcesSection.style.display = 'none';
             }
         }
@@ -1014,7 +1013,7 @@
                     resultsDiv.innerHTML = `
                         <div class="error-message">
                             <h3>${data.error}</h3>
-                            <p style="margin-top: 10px;">Kör: <code>npm run index</code></p>
+                            <p style="margin-top: 10px;">Run: <code>npm run index</code></p>
                         </div>
                     `;
                     return;
@@ -1024,14 +1023,14 @@
                     resultsDiv.innerHTML = `
                         <div class="no-results">
                             <div class="no-results-icon">🔍</div>
-                            <div class="no-results-text">0 resultat hittades</div>
-                            <div class="no-results-hint">Prova en annan sökterm eller kontrollera stavningen</div>
+                            <div class="no-results-text">0 results found</div>
+                            <div class="no-results-hint">Try a different search term or check the spelling</div>
                         </div>
                     `;
                 } else {
                     resultsInfo.style.display = 'block';
-                    resultsCount.innerHTML = `<strong>${data.count}</strong> resultat för "<strong>${escapeHtml(query)}</strong>"`;
-                    searchStats.textContent = `Sökte igenom ${data.total_searched} sidor på ${data.search_time_ms}ms`;
+                    resultsCount.innerHTML = `<strong>${data.count}</strong> results for "<strong>${escapeHtml(query)}</strong>"`;
+                    searchStats.textContent = `Searched ${data.total_searched} pages in ${data.search_time_ms}ms`;
                     
                     displayResults(data.results);
                 }
@@ -1039,8 +1038,8 @@
                 loadingDiv.style.display = 'none';
                 resultsDiv.innerHTML = `
                     <div class="error-message">
-                        <h3>❌ Anslutningsfel</h3>
-                        <p style="margin-top: 10px;">Kontrollera att servern körs: <code>npm start</code></p>
+                        <h3>❌ Connection Error</h3>
+                        <p style="margin-top: 10px;">Make sure the server is running: <code>npm start</code></p>
                     </div>
                 `;
             }
@@ -1049,7 +1048,7 @@
         function displayResults(results) {
             resultsDiv.innerHTML = results.map(result => {
                 const isLocal = result.url && result.url.startsWith('file://');
-                const localBadge = isLocal ? '<span class="badge" style="background: var(--accent-purple);">📁 Lokal</span>' : '';
+                const localBadge = isLocal ? '<span class="badge" style="background: var(--accent-purple);">📁 Local</span>' : '';
                 
                 // For local files, use preview; for online, use direct link
                 const openAction = isLocal 
@@ -1057,8 +1056,8 @@
                     : `href="${result.url}" target="_blank"`;
                 
                 const openButton = isLocal
-                    ? `<button class="open-btn" onclick="openPreview('${escapeHtml(result.file_path || result.url.replace('file://', ''))}', '${escapeHtml(result.title)}', '${escapeHtml(result.page_name)}')">👁️ Förhandsgranska</button>`
-                    : `<a href="${result.url}" class="open-btn" target="_blank">Öppna sida →</a>`;
+                    ? `<button class="open-btn" onclick="openPreview('${escapeHtml(result.file_path || result.url.replace('file://', ''))}', '${escapeHtml(result.title)}', '${escapeHtml(result.page_name)}')">👁️ Preview</button>`
+                    : `<a href="${result.url}" class="open-btn" target="_blank">Open page →</a>`;
                 
                 // Highlight snippet if available
                 let snippetHTML = '';
@@ -1112,11 +1111,11 @@
 
         function formatMatchType(type) {
             const types = {
-                'exact_title': '🎯 Exakt',
-                'title_contains': '📌 Titel',
-                'page_name': '📄 Sidnamn',
+                'exact_title': '🎯 Exact',
+                'title_contains': '📌 Title',
+                'page_name': '📄 Page name',
                 'url': '🔗 URL',
-                'content': '📝 Innehåll',
+                'content': '📝 Content',
                 'fuzzy': '🔍 Fuzzy'
             };
             return types[type] || type;
