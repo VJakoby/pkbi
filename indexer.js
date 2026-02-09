@@ -3,7 +3,6 @@ const fs = require('fs').promises;
 const path = require('path');
 const cheerio = require('cheerio');
 const crypto = require('crypto');
-const crypto = require('crypto');
 
 class ContentIndexer {
     constructor() {
