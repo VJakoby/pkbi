@@ -1021,7 +1021,10 @@ if (require.main === module) {
                     totalCached += result.cached;
                     totalSize += parseFloat(result.size_mb);
                     
-                    // Add to index
+                    // Remove old pages from this source (if re-caching)
+                    indexer.index.pages = indexer.index.pages.filter(p => p.source_id !== source.id);
+        
+                    // Add newly cached pages to index
                     indexer.index.pages.push(...pages);
                 }
             }
