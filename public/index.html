@@ -969,7 +969,7 @@
             }
         });
 
-async function loadSources() {
+ async function loadSources() {
     try {
         const response = await fetch('/api/sources');
         const data = await response.json();
@@ -991,8 +991,8 @@ async function loadSources() {
             
             sourcesGrid.innerHTML = data.sources.map(source => {
                 const cacheInfo = cacheMap[source.id];
-                const cacheBadge = cacheInfo 
-                    ? `<span class="cache-badge" style="background: var(--accent-green); color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px; margin-left: 6px;">📱 ${cacheInfo.cached_pages} cached</span>`
+                const cacheBadge = cacheInfo
+                    ? `<span class="cache-badge" style="background: #1f6feb; color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px;">📱Cached</span>`
                     : '';
                 
                 return `
@@ -1018,8 +1018,6 @@ async function loadSources() {
         sourcesSection.style.display = 'none';
     }
 }
-
-        loadSources();
 
         // Search functionality
         searchInput.addEventListener('input', (e) => {
@@ -1215,6 +1213,8 @@ async function loadSources() {
                 tipsDiv.style.display = 'block';
             }
         });
+        
+    loadSources();
     </script>
 </body>
 </html>
