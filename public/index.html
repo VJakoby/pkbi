@@ -969,35 +969,55 @@
             }
         });
 
-        // Load sources on page load
-        async function loadSources() {
-            try {
-                const response = await fetch('/api/sources');
-                const data = await response.json();
-                
-                if (data.sources && data.sources.length > 0) {
-                    sourcesCount.textContent = `${data.total} källor`;
-                    
-                    sourcesGrid.innerHTML = data.sources.map(source => `
-                        <div class="source-card">
-                            <div class="source-name">
-                                ${escapeHtml(source.name)}
-                                <span class="source-type">${source.type}</span>
-                            </div>
-                            ${source.description ? `<div class="source-desc">${escapeHtml(source.description)}</div>` : ''}
-                            <div class="source-pages">
-                                📄 ${source.page_count} pages indexed
-                            </div>
-                        </div>
-                    `).join('');
-                } else {
-                    sourcesSection.style.display = 'none';
-                }
-            } catch (error) {
-                console.error('Could not load sources:', error);
-                sourcesSection.style.display = 'none';
-            }
+async function loadSources() {
+    try {
+        const response = await fetch('/api/sources');
+        const data = await response.json();
+        
+        // Load cache status
+        const cacheResponse = await fetch('/api/cache-status');
+        const cacheData = await cacheResponse.json();
+        const cacheMap = {};
+        
+        // Create map of cached sources
+        if (cacheData.sources) {
+            cacheData.sources.forEach(s => {
+                cacheMap[s.source_id] = s;
+            });
         }
+        
+        if (data.sources && data.sources.length > 0) {
+            sourcesCount.textContent = `${data.total} sources`;
+            
+            sourcesGrid.innerHTML = data.sources.map(source => {
+                const cacheInfo = cacheMap[source.id];
+                const cacheBadge = cacheInfo 
+                    ? `<span class="cache-badge" style="background: var(--accent-green); color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px; margin-left: 6px;">📱 ${cacheInfo.cached_pages} cached</span>`
+                    : '';
+                
+                return `
+                    <div class="source-card">
+                        <div class="source-name">
+                            ${escapeHtml(source.name)}
+                            <span class="source-type">${source.type}</span>
+                            ${cacheBadge}
+                        </div>
+                        ${source.description ? `<div class="source-desc">${escapeHtml(source.description)}</div>` : ''}
+                        <div class="source-pages">
+                            📄 ${source.page_count} pages indexed
+                            ${cacheInfo ? `<br>💾 ${cacheInfo.size_mb} MB cached` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        } else {
+            sourcesSection.style.display = 'none';
+        }
+    } catch (error) {
+        console.error('Could not load sources:', error);
+        sourcesSection.style.display = 'none';
+    }
+}
 
         loadSources();
 

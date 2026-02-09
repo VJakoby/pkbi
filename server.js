@@ -80,7 +80,9 @@ app.post('/api/search', (req, res) => {
             relevance_score: r.relevance_score,
             match_type: r.match_type,
             snippet: r.snippet,  // Now includes {text, highlightStart, highlightLength}
-            is_local: r.is_local
+            is_local: r.is_local,
+            is_cached: r.is_cached,
+            cache_hash: r.cache_hash
         }));
 
         res.json({
