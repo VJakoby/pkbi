@@ -13,12 +13,10 @@ class ContentIndexer {
 
     async initialize() {
         const dataDir = path.join(__dirname, 'data');
-        const cacheDir = path.join(__dirname, 'data', 'cache', 'online');
         try {
             await fs.mkdir(dataDir, { recursive: true });
-            await fs.mkdir(cacheDir, { recursive: true });
         } catch (err) {
-            // Directories exist
+            // Directory exists
         }
 
         try {
@@ -740,7 +738,7 @@ class ContentIndexer {
             }
             // 2. TITEL INNEHÅLLER SÖKTERM
             else if (titleLower.includes(searchTerm)) {
-                score += 50;
+                score += 100;
                 matchType = 'title_contains';
             }
             
@@ -752,14 +750,14 @@ class ContentIndexer {
             
             // 4. URL-MATCH (viktigt för specifika pages)
             if (urlLower.includes(searchTerm)) {
-                score += 20;
+                score += 10;
                 if (!matchType) matchType = 'url';
             }
             
             // 5. INNEHÅLLS-MATCH
             const occurrences = (contentLower.match(new RegExp(searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi')) || []).length;
             if (occurrences > 0) {
-                score += occurrences * 2;
+                score += occurrences * 1;
                 if (!matchType) matchType = 'content';
             }
             
@@ -810,144 +808,6 @@ class ContentIndexer {
         }
         
         return matches / pattern.length;
-    }
-
-    // ============ OFFLINE CACHE METHODS ============
-    
-    hashUrl(url) {
-        return crypto.createHash('md5').update(url).digest('hex');
-    }
-
-    removeImages(html) {
-        const $ = cheerio.load(html);
-        
-        // Remove all images to save space
-        $('img').remove();
-        $('picture').remove();
-        $('svg').remove();
-        $('video').remove();
-        $('audio').remove();
-        
-        // Remove lazy loading attributes
-        $('[data-src]').removeAttr('data-src');
-        $('[srcset]').removeAttr('srcset');
-        
-        return $.html();
-    }
-
-    async getCacheSize(dir) {
-        try {
-            let totalSize = 0;
-            const files = await fs.readdir(dir);
-            for (const file of files) {
-                if (file === 'metadata.json') continue;
-                const stats = await fs.stat(path.join(dir, file));
-                totalSize += stats.size;
-            }
-            return (totalSize / 1024 / 1024).toFixed(2); // MB
-        } catch (error) {
-            return '0.00';
-        }
-    }
-
-    async saveCacheMetadata(sourceId, metadata) {
-        const cacheDir = path.join(__dirname, 'data', 'cache', 'online', sourceId);
-        await fs.mkdir(cacheDir, { recursive: true });
-        const metaPath = path.join(cacheDir, 'metadata.json');
-        await fs.writeFile(metaPath, JSON.stringify(metadata, null, 2), 'utf-8');
-    }
-
-    async cacheSourcePages(source, pages) {
-        const cacheDir = path.join(__dirname, 'data', 'cache', 'online', source.id);
-        await fs.mkdir(cacheDir, { recursive: true });
-        
-        console.log(`  💾 Caching pages for offline use...`);
-        
-        let cached = 0;
-        let failed = 0;
-        
-        for (let i = 0; i < pages.length; i++) {
-            const page = pages[i];
-            
-            try {
-                // Fetch full HTML
-                const html = await this.fetchPage(page.url);
-                if (!html) {
-                    failed++;
-                    continue;
-                }
-                
-                // Remove images to save space
-                const cleanHtml = this.removeImages(html);
-                
-                // Generate hash for filename
-                const hash = this.hashUrl(page.url);
-                const cachePath = path.join(cacheDir, `${hash}.html`);
-                
-                await fs.writeFile(cachePath, cleanHtml, 'utf-8');
-                
-                // Store cache metadata in page
-                page.cache_path = cachePath;
-                page.cache_hash = hash;
-                page.cached_at = new Date().toISOString();
-                page.is_cached = true;
-                
-                cached++;
-                
-                // Progress indicator
-                if ((i + 1) % 10 === 0 || i === pages.length - 1) {
-                    console.log(`    Cached ${cached}/${pages.length} pages...`);
-                }
-                
-                // Small delay to avoid hammering server
-                await new Promise(resolve => setTimeout(resolve, 200));
-                
-            } catch (error) {
-                console.error(`    ❌ Cache failed for: ${page.title}`);
-                failed++;
-            }
-        }
-        
-        const sizeInMB = await this.getCacheSize(cacheDir);
-        
-        console.log(`    ✅ Cached ${cached}/${pages.length} pages (${failed} failed)`);
-        console.log(`    💾 Total size: ${sizeInMB} MB`);
-        
-        // Save metadata
-        await this.saveCacheMetadata(source.id, {
-            source_name: source.name,
-            source_id: source.id,
-            total_pages: pages.length,
-            cached_pages: cached,
-            failed_pages: failed,
-            cached_at: new Date().toISOString(),
-            size_mb: parseFloat(sizeInMB)
-        });
-        
-        return { cached, failed, size_mb: sizeInMB };
-    }
-
-    async getCacheStatus() {
-        const cacheDir = path.join(__dirname, 'data', 'cache', 'online');
-        const status = [];
-        
-        try {
-            const sources = await fs.readdir(cacheDir);
-            
-            for (const sourceId of sources) {
-                try {
-                    const metaPath = path.join(cacheDir, sourceId, 'metadata.json');
-                    const metadata = JSON.parse(await fs.readFile(metaPath, 'utf-8'));
-                    status.push(metadata);
-                } catch (e) {
-                    // No metadata for this source
-                }
-            }
-        } catch (error) {
-            // Cache directory doesn't exist yet
-        }
-        
-        return status;
     }
 
     getIndexInfo() {
@@ -1112,10 +972,8 @@ if (require.main === module) {
             console.log('\n📚 PRS Indexer\n');
             console.log('Usage:');
             console.log('  node indexer.js build              - Rebuild entire index');
-            console.log('  node indexer.js cache              - Cache offline sources');
-            console.log('  node indexer.js cache-status       - Show cache status');
             console.log('  node indexer.js update <filepath>  - Update a local file');
-            console.log('  node indexer.js remove <filepath>  - Remove file from index');
+            console.log('  node indexer.js remove <filepath>  - Remove a file from the index');
             console.log('  node indexer.js search <term>      - Search in index');
             console.log('  node indexer.js info               - Show index information\n');
         }
