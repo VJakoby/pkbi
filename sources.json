@@ -9,20 +9,20 @@
         ".md",
         ".markdown"
       ],
-      "enabled": true,
+      "enabled": false,
       "description": "Personal pentest notes in markdown format"
     }
   ],
   "online_sources": [
     {
       "id": "github-notes-example",
-      "name": "GitHub Security Notes Example",
+      "name": "SQL Injection Payloads - GitHub",
       "type": "markdown",
-      "enabled": true,
+      "enabled": false,
+      "cache_offline": false,
       "description": "EXAMPLE Raw markdown files from GitHub",
       "urls": [
-        "https://raw.githubusercontent.com/user/repo/main/SECURITY.md",
-        "https://raw.githubusercontent.com/user/repo/main/docs/guide.md"
+        "https://github.com/yogsec/SQL-Injection-Payloads/blob/main/README.md"
       ]
     },
     {
@@ -41,7 +41,7 @@
       "type": "gitbook",
       "index_url": "https://hackviser.com/tactics/pentesting",
       "search_url": "https://hackviser.com/tactics/pentesting?q={query}",
-      "enabled": true,
+      "enabled": false,
       "description": "Pentesting tactics and techniques"
     },
     {
@@ -50,7 +50,7 @@
       "type": "gitbook",
       "index_url": "https://hackviser.com/tactics/tools",
       "search_url": "https://hackviser.com/tactics/tools?q={query}",
-      "enabled": true,
+      "enabled": false,
       "description": "Security tools and usage guides"
     },
     {
@@ -59,7 +59,7 @@
       "type": "gitbook",
       "index_url": "https://hackviser.com/tactics/hardening",
       "search_url": "https://hackviser.com/tactics/hardening?q={query}",
-      "enabled": true,
+      "enabled": false,
       "description": "System hardening guides"
     },
     {
@@ -68,7 +68,7 @@
       "type": "gitbook",
       "index_url": "https://oscp-notes-2025.gitbook.io/oscp+-notes-2025/",
       "search_url": "https://oscp-notes-2025.gitbook.io/oscp+-notes-2025?q={query}",
-      "enabled": true,
+      "enabled": false,
       "description": "OSCP certification study notes"
     },
     {
@@ -77,7 +77,7 @@
       "type": "gitbook",
       "index_url": "https://guide.offsecnewbie.com/",
       "search_url": "https://guide.offsecnewbie.com/?q={query}",
-      "enabled": true,
+      "enabled": false,
       "description": "Offensive security beginner guide"
     },
     {
@@ -86,7 +86,7 @@
       "type": "gitbook",
       "index_url": "https://www.verylazytech.com/",
       "search_url": "https://www.verylazytech.com/?q={query}",
-      "enabled": true,
+      "enabled": false,
       "description": "Pentesting notes and guides"
     },
     {
@@ -95,7 +95,7 @@
       "type": "gitbook",
       "index_url": "https://blog.1nf1n1ty.team/hacktricks",
       "search_url": "https://blog.1nf1n1ty.team/hacktricks?q={query}",
-      "enabled": true,
+      "enabled": false,
       "description": "Hacking tricks and techniques"
     },
     {
@@ -104,7 +104,7 @@
       "type": "gitbook",
       "index_url": "https://pentestbook.six2dez.com/",
       "search_url": "https://pentestbook.six2dez.com/?q={query}",
-      "enabled": true,
+      "enabled": false,
       "description": "Comprehensive pentesting methodology"
     },
     {
@@ -113,7 +113,7 @@
       "type": "gitbook",
       "index_url": "https://book.hacktricks.xyz/",
       "search_url": "https://book.hacktricks.xyz/?q={query}",
-      "enabled": true,
+      "enabled": false,
       "description": "Hacking tricks and techniques"
     },
     {
@@ -122,7 +122,7 @@
       "type": "gitbook",
       "index_url": "https://exploit-notes.hdks.org",
       "search_url": "https://exploit-notes.hdks.org?q={query}",
-      "enabled": true,
+      "enabled": false,
       "description": "Exploit development and security research"
     }
   ],

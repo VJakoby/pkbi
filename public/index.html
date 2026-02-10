@@ -1134,19 +1134,9 @@
                 if (result.snippet) {
                     // Handle both old string format and new object format
                     if (typeof result.snippet === 'string') {
-                        // Old format: just a string
                         snippetHTML = `<div class="result-snippet">${escapeHtml(result.snippet)}</div>`;
                     } else if (result.snippet.text) {
-                        // New format: object with highlight metadata
-                        const snippet = result.snippet;
-                        if (snippet.highlightStart >= 0 && snippet.highlightLength > 0) {
-                            const before = escapeHtml(snippet.text.substring(0, snippet.highlightStart));
-                            const highlight = escapeHtml(snippet.text.substring(snippet.highlightStart, snippet.highlightStart + snippet.highlightLength));
-                            const after = escapeHtml(snippet.text.substring(snippet.highlightStart + snippet.highlightLength));
-                            snippetHTML = `<div class="result-snippet">${before}<mark style="background: rgba(88, 166, 255, 0.3); color: #58a6ff; font-weight: 600; padding: 2px 4px; border-radius: 3px;">${highlight}</mark>${after}</div>`;
-                        } else {
-                            snippetHTML = `<div class="result-snippet">${escapeHtml(snippet.text)}</div>`;
-                        }
+                        snippetHTML = `<div class="result-snippet">${escapeHtml(result.snippet.text)}</div>`;
                     }
                 }
                 
