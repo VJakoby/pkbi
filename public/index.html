@@ -765,7 +765,7 @@
 
         <!-- Tips (shown when no search) -->
         <div class="tips" id="tips">
-            <div class="tips-title">💡 Example in searches</div>
+            <div class="tips-title">💡 Example searches</div>
             <div class="tips-grid">
                 <div class="tip-card">
                     <h3>🔐 Services & Protocols</h3>
@@ -1207,14 +1207,14 @@
             searchInput.focus();
         });
 
+        loadSources();
+
         // Show/hide tips based on search input
         searchInput.addEventListener('focus', () => {
             if (!searchInput.value) {
                 tipsDiv.style.display = 'block';
             }
         });
-        
-    loadSources();
     </script>
 </body>
 </html>
