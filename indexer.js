@@ -1028,6 +1028,18 @@ if (require.main === module) {
                     indexer.index.pages.push(...pages);
                 }
             }
+
+            // Update sources metadata (so UI can display cached sources)
+            indexer.index.sources = offlineSources.map(s => ({
+                id: s.id,
+                name: s.name,
+                type: s.type,
+                description: s.description || '',
+                page_count: indexer.index.pages.filter(p => p.source_id === s.id).length,
+                is_local: false  // Cached sources are online sources
+            }));
+            
+            indexer.index.last_updated = new Date().toISOString();
             
             await indexer.saveIndex();
             
