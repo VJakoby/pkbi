@@ -334,7 +334,7 @@ app.get('/health', (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`\n✅ Pentest - Knowledge Base Indexer (P-KBI) server started`);
+    console.log(`\n✅ Pentest Knowledge Base Indexer server started`);
     console.log(`🌐 Server is being run at:  http://localhost:${PORT}`);
     console.log(`📂 Open http://localhost:${PORT} in your web-browser\n`);
     
