@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -746,6 +746,26 @@
             <div class="search-hint">💡 Tips: Try misspellings - fuzzy search will still find it!</div>
         </div>
 
+        <!-- Fuzzy Search Mode -->
+        <div class="fuzzy-options" style="margin-top: 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 24px; justify-content: center;">
+            <span style="color: #8b949e; font-size: 14px; font-weight: 500;">Fuzzy search:</span>
+            
+            <label style="display: flex; align-items: center; gap: 8px; color: #8b949e; font-size: 14px; cursor: pointer;">
+                <input type="radio" name="fuzzyMode" value="off" style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent-blue);">
+                <span>Off</span>
+            </label>
+            
+            <label style="display: flex; align-items: center; gap: 8px; color: #8b949e; font-size: 14px; cursor: pointer;">
+                <input type="radio" name="fuzzyMode" value="normal" checked style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent-blue);">
+                <span>Normal</span>
+            </label>
+            
+            <label style="display: flex; align-items: center; gap: 8px; color: #8b949e; font-size: 14px; cursor: pointer;">
+                <input type="radio" name="fuzzyMode" value="prefer" style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent-blue);">
+                <span>Prefer</span>
+            </label>
+        </div>
+
         <!-- Loading -->
         <div class="loading" id="loading">
             <div class="spinner"></div>
@@ -860,9 +880,47 @@
         let searchTimeout;
         let sourcesCollapsed = false;
         let currentFilePath = null;
+        let fuzzyMode = 'normal';  // 'off', 'normal', 'prefer'
 
-        // Theme management (if exists)
-        // ... existing theme code ...
+        // Load saved fuzzy preference
+        const savedFuzzyMode = localStorage.getItem('fuzzyMode');
+        if (savedFuzzyMode) {
+            fuzzyMode = savedFuzzyMode;
+            const radio = document.querySelector(`input[name="fuzzyMode"][value="${savedFuzzyMode}"]`);
+            if (radio) radio.checked = true;
+        }
+
+        // Update hint text based on fuzzy mode
+        function updateFuzzyHint() {
+            const hint = document.getElementById('searchHint');
+            if (!hint) return;
+            
+            if (fuzzyMode === 'off') {
+                hint.textContent = '🎯 Exact search only - results must match precisely';
+            } else if (fuzzyMode === 'normal') {
+                hint.textContent = '💡 Fuzzy search active - exact matches rank higher';
+            } else if (fuzzyMode === 'prefer') {
+                hint.textContent = '🔍 Fuzzy search preferred - finds approximate matches first';
+            }
+        }
+
+        // Listen for fuzzy mode changes
+        document.querySelectorAll('input[name="fuzzyMode"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                fuzzyMode = e.target.value;
+                localStorage.setItem('fuzzyMode', fuzzyMode);
+                updateFuzzyHint();
+                
+                // Re-search if there's an active query
+                if (searchInput.value.trim()) {
+                    performSearch(searchInput.value.trim());
+                    console.log(search)
+                }
+            });
+        });
+
+        // Set initial hint
+        updateFuzzyHint();
 
         // Toggle sources collapse
         function toggleSources() {
@@ -1060,7 +1118,7 @@
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ query, fuzzy: true })
+                    body: JSON.stringify({ query, fuzzyMode: fuzzyMode })
                 });
 
                 const data = await response.json();

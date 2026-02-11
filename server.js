@@ -50,7 +50,26 @@ app.get('/api/status', (req, res) => {
 
 // API: Search
 app.post('/api/search', (req, res) => {
-    const { query, fuzzy = true } = req.body;
+    const { query, fuzzyMode, fuzzy = true, fuzzy_prefer = false } = req.body;
+    
+    // Convert fuzzyMode to fuzzy and fuzzy_prefer flags
+    let fuzzyEnabled = fuzzy;
+    let fuzzyPrefer = fuzzy_prefer;
+    
+    if (fuzzyMode) {
+        if (fuzzyMode === 'off') {
+            fuzzyEnabled = false;
+            fuzzyPrefer = false;
+        } else if (fuzzyMode === 'normal') {
+            fuzzyEnabled = true;
+            fuzzyPrefer = false;
+        } else if (fuzzyMode === 'prefer') {
+            fuzzyEnabled = true;
+            fuzzyPrefer = true;
+        }
+    }
+    
+    console.log('Search request:', { query, fuzzyMode, fuzzyEnabled, fuzzyPrefer });
     
     if (!indexReady) {
         return res.status(503).json({
@@ -66,7 +85,7 @@ app.post('/api/search', (req, res) => {
 
     try {
         const startTime = Date.now();
-        const results = indexer.search(query, { fuzzy });
+        const results = indexer.search(query, { fuzzy: fuzzyEnabled, fuzzy_prefer: fuzzyPrefer });
         const searchTime = Date.now() - startTime;
         
         // Limit to top 50 results for better performance
