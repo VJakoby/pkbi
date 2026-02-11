@@ -16,8 +16,9 @@ class ContentIndexer {
         const cacheDir = path.join(__dirname, 'data', 'cache', 'online');
         try {
             await fs.mkdir(dataDir, { recursive: true });
+            await fs.mkdir(cacheDir, { recursive: true });
         } catch (err) {
-            // Directory exists
+            // Directories exist
         }
 
         try {
@@ -739,7 +740,7 @@ class ContentIndexer {
             }
             // 2. TITEL INNEHÅLLER SÖKTERM
             else if (titleLower.includes(searchTerm)) {
-                score += 100;
+                score += 50;
                 matchType = 'title_contains';
             }
             
@@ -751,14 +752,14 @@ class ContentIndexer {
             
             // 4. URL-MATCH (viktigt för specifika pages)
             if (urlLower.includes(searchTerm)) {
-                score += 10;
+                score += 20;
                 if (!matchType) matchType = 'url';
             }
             
             // 5. INNEHÅLLS-MATCH
             const occurrences = (contentLower.match(new RegExp(searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi')) || []).length;
             if (occurrences > 0) {
-                score += occurrences * 1;
+                score += occurrences * 2;
                 if (!matchType) matchType = 'content';
             }
             
@@ -948,7 +949,7 @@ class ContentIndexer {
         
         return status;
     }
-    
+
     getIndexInfo() {
         return {
             total_pages: this.index.pages.length,
@@ -1027,18 +1028,6 @@ if (require.main === module) {
                     indexer.index.pages.push(...pages);
                 }
             }
-
-            // Update sources metadata (so UI can display cached sources)
-            indexer.index.sources = offlineSources.map(s => ({
-                id: s.id,
-                name: s.name,
-                type: s.type,
-                description: s.description || '',
-                page_count: indexer.index.pages.filter(p => p.source_id === s.id).length,
-                is_local: false  // Cached sources are online sources
-            }));
-            
-            indexer.index.last_updated = new Date().toISOString();
             
             await indexer.saveIndex();
             
@@ -1111,8 +1100,10 @@ if (require.main === module) {
             console.log('\n📚 PRS Indexer\n');
             console.log('Usage:');
             console.log('  node indexer.js build              - Rebuild entire index');
+            console.log('  node indexer.js cache              - Cache offline sources');
+            console.log('  node indexer.js cache-status       - Show cache status');
             console.log('  node indexer.js update <filepath>  - Update a local file');
-            console.log('  node indexer.js remove <filepath>  - Remove a file from the index');
+            console.log('  node indexer.js remove <filepath>  - Remove file from index');
             console.log('  node indexer.js search <term>      - Search in index');
             console.log('  node indexer.js info               - Show index information\n');
         }
