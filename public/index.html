@@ -992,7 +992,7 @@
             sourcesGrid.innerHTML = data.sources.map(source => {
                 const cacheInfo = cacheMap[source.id];
                 const cacheBadge = cacheInfo
-                    ? `<span class="cache-badge" style="background: #1f6feb; color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px;">📱Cached</span>`
+                    ? `<span class="cache-badge" style="background: #1f6feb; color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px;">Cached</span>`
                     : '';
                 
                 return `
@@ -1106,7 +1106,8 @@
             resultsDiv.innerHTML = results.map(result => {
                 const isLocal = result.url && result.url.startsWith('file://');
                 const isCached = result.is_cached === true || result.cache_hash; // Has cached version
-                
+                const localBadge = isLocal ? '<span class="badge" style="background: var(--accent-purple);">📁 Lokal</span>' : '';
+
                 let badge = '';
                 if (isLocal) {
                     badge = '<span class="badge" style="background: var(--accent-purple);">📁 Local</span>';
