@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -793,7 +793,6 @@
                         <span class="tip-example">windows enum</span>
                         <span class="tip-example">linux privesc</span>
                         <span class="tip-example">active directory</span>
-                        <span class="tip-example">exfiltration</span>
                     </div>
                 </div>
                 <div class="tip-card">
@@ -803,7 +802,6 @@
                         <span class="tip-example">metasploit</span>
                         <span class="tip-example">burp</span>
                         <span class="tip-example">john</span>
-                        <span class="tip-example">dirbuster</span>
                     </div>
                 </div>
             </div>
@@ -910,6 +908,45 @@
             currentFilePath = null;
         }
 
+        async function openCachedPage(sourceId, url, title) {
+            currentFilePath = null;
+            const modal = document.getElementById('previewModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalSubtitle = document.getElementById('modalSubtitle');
+            const modalContent = document.getElementById('modalContent');
+            
+            modal.style.display = 'block';
+            modalTitle.textContent = title + ' (Offline)';
+            modalSubtitle.textContent = `📱 Cached from ${sourceId}`;
+            modalContent.innerHTML = '<p style="text-align: center; color: #8b949e;">Loading cached page...</p>';
+            
+            try {
+                const response = await fetch(`/api/cached-page?source_id=${encodeURIComponent(sourceId)}&url=${encodeURIComponent(url)}`);
+                const data = await response.json();
+                
+                if (data.error) {
+                    modalContent.innerHTML = `
+                        <div style="text-align: center; padding: 40px;">
+                            <p style="color: #f85149; font-size: 18px; margin-bottom: 16px;">❌ ${data.error}</p>
+                            <p style="color: #8b949e;">${data.message || ''}</p>
+                            <br>
+                            <a href="${url}" target="_blank" class="open-btn">🌐 Open online instead</a>
+                        </div>
+                    `;
+                } else {
+                    modalContent.innerHTML = data.html;
+                }
+            } catch (error) {
+                modalContent.innerHTML = `
+                    <div style="text-align: center; padding: 40px;">
+                        <p style="color: #f85149;">Could not load cached page</p>
+                        <br>
+                        <a href="${url}" target="_blank" class="open-btn">🌐 Open online instead</a>
+                    </div>
+                `;
+            }
+        }
+
         function copyFilePath() {
             if (currentFilePath) {
                 navigator.clipboard.writeText(currentFilePath);
@@ -932,37 +969,55 @@
             }
         });
 
-        // Load sources on page load
-        async function loadSources() {
-            try {
-                const response = await fetch('/api/sources');
-                const data = await response.json();
-                
-                if (data.sources && data.sources.length > 0) {
-                    sourcesCount.textContent = `${data.total} källor`;
-                    
-                    sourcesGrid.innerHTML = data.sources.map(source => `
-                        <div class="source-card">
-                            <div class="source-name">
-                                ${escapeHtml(source.name)}
-                                <span class="source-type">${source.type}</span>
-                            </div>
-                            ${source.description ? `<div class="source-desc">${escapeHtml(source.description)}</div>` : ''}
-                            <div class="source-pages">
-                                📄 ${source.page_count} pages indexed
-                            </div>
-                        </div>
-                    `).join('');
-                } else {
-                    sourcesSection.style.display = 'none';
-                }
-            } catch (error) {
-                console.error('Could not load sources:', error);
-                sourcesSection.style.display = 'none';
-            }
+ async function loadSources() {
+    try {
+        const response = await fetch('/api/sources');
+        const data = await response.json();
+        
+        // Load cache status
+        const cacheResponse = await fetch('/api/cache-status');
+        const cacheData = await cacheResponse.json();
+        const cacheMap = {};
+        
+        // Create map of cached sources
+        if (cacheData.sources) {
+            cacheData.sources.forEach(s => {
+                cacheMap[s.source_id] = s;
+            });
         }
-
-        loadSources();
+        
+        if (data.sources && data.sources.length > 0) {
+            sourcesCount.textContent = `${data.total} sources`;
+            
+            sourcesGrid.innerHTML = data.sources.map(source => {
+                const cacheInfo = cacheMap[source.id];
+                const cacheBadge = cacheInfo
+                    ? `<span class="cache-badge" style="background: #1f6feb; color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px;">Cached</span>`
+                    : '';
+                
+                return `
+                    <div class="source-card">
+                        <div class="source-name">
+                            ${escapeHtml(source.name)}
+                            <span class="source-type">${source.type}</span>
+                            ${cacheBadge}
+                        </div>
+                        ${source.description ? `<div class="source-desc">${escapeHtml(source.description)}</div>` : ''}
+                        <div class="source-pages">
+                            📄 ${source.page_count} pages indexed
+                            ${cacheInfo ? `<br>💾 ${cacheInfo.size_mb} MB cached` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        } else {
+            sourcesSection.style.display = 'none';
+        }
+    } catch (error) {
+        console.error('Could not load sources:', error);
+        sourcesSection.style.display = 'none';
+    }
+}
 
         // Search functionality
         searchInput.addEventListener('input', (e) => {
@@ -1050,35 +1105,39 @@
         function displayResults(results) {
             resultsDiv.innerHTML = results.map(result => {
                 const isLocal = result.url && result.url.startsWith('file://');
+                const isCached = result.is_cached === true || result.cache_hash; // Has cached version
                 const localBadge = isLocal ? '<span class="badge" style="background: var(--accent-purple);">📁 Lokal</span>' : '';
+
+                let badge = '';
+                if (isLocal) {
+                    badge = '<span class="badge" style="background: var(--accent-purple);">📁 Local</span>';
+                } else if (isCached) {
+                    badge = '<span class="badge" style="background: var(--accent-green);">📱 Cached</span>';
+                }
                 
-                // For local files, use preview; for online, use direct link
-                const openAction = isLocal 
-                    ? `onclick="openPreview('${escapeHtml(result.file_path || result.url.replace('file://', ''))}', '${escapeHtml(result.title)}', '${escapeHtml(result.page_name)}')" style="cursor: pointer;"`
-                    : `href="${result.url}" target="_blank"`;
-                
-                const openButton = isLocal
-                    ? `<button class="open-btn" onclick="openPreview('${escapeHtml(result.file_path || result.url.replace('file://', ''))}', '${escapeHtml(result.title)}', '${escapeHtml(result.page_name)}')">👁️ Preview</button>`
-                    : `<a href="${result.url}" class="open-btn" target="_blank">Open page →</a>`;
+                // Determine button based on file type
+                let openButton;
+                if (isLocal) {
+                    openButton = `<button class="open-btn" onclick="openPreview('${escapeHtml(result.file_path || result.url.replace('file://', ''))}', '${escapeHtml(result.title)}', '${escapeHtml(result.page_name)}')">👁️ Preview</button>`;
+                } else if (isCached) {
+                    openButton = `
+                        <button class="open-btn" onclick="openCachedPage('${escapeHtml(result.source_id)}', '${escapeHtml(result.url)}', '${escapeHtml(result.title)}')">
+                            📱 Offline Preview
+                        </button>
+                        <a href="${result.url}" class="open-btn" style="background: #30363d; margin-left: 8px;" target="_blank">🌐 Online</a>
+                    `;
+                } else {
+                    openButton = `<a href="${result.url}" class="open-btn" target="_blank">Open page →</a>`;
+                }
                 
                 // Highlight snippet if available
                 let snippetHTML = '';
                 if (result.snippet) {
                     // Handle both old string format and new object format
                     if (typeof result.snippet === 'string') {
-                        // Old format: just a string
                         snippetHTML = `<div class="result-snippet">${escapeHtml(result.snippet)}</div>`;
                     } else if (result.snippet.text) {
-                        // New format: object with highlight metadata
-                        const snippet = result.snippet;
-                        if (snippet.highlightStart >= 0 && snippet.highlightLength > 0) {
-                            const before = escapeHtml(snippet.text.substring(0, snippet.highlightStart));
-                            const highlight = escapeHtml(snippet.text.substring(snippet.highlightStart, snippet.highlightStart + snippet.highlightLength));
-                            const after = escapeHtml(snippet.text.substring(snippet.highlightStart + snippet.highlightLength));
-                            snippetHTML = `<div class="result-snippet">${before}<mark style="background: rgba(88, 166, 255, 0.3); color: #58a6ff; font-weight: 600; padding: 2px 4px; border-radius: 3px;">${highlight}</mark>${after}</div>`;
-                        } else {
-                            snippetHTML = `<div class="result-snippet">${escapeHtml(snippet.text)}</div>`;
-                        }
+                        snippetHTML = `<div class="result-snippet">${escapeHtml(result.snippet.text)}</div>`;
                     }
                 }
                 
@@ -1090,7 +1149,7 @@
                             <div class="result-page-name">📄 ${escapeHtml(result.page_name)}</div>
                         </div>
                         <div class="result-badges">
-                            ${localBadge}
+                            ${badge}
                             <span class="badge badge-score">${result.relevance_score}</span>
                             <span class="badge badge-match">${formatMatchType(result.match_type)}</span>
                         </div>
@@ -1138,6 +1197,8 @@
         window.addEventListener('load', () => {
             searchInput.focus();
         });
+
+        loadSources();
 
         // Show/hide tips based on search input
         searchInput.addEventListener('focus', () => {

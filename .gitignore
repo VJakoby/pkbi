@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+
+# Generated index
+data/
+*.meta.json
+
+# Offline notes (uncomment if you want to keep notes private)
+# offline-notes/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~

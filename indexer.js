@@ -2,6 +2,7 @@ const axios = require('axios');
 const fs = require('fs').promises;
 const path = require('path');
 const cheerio = require('cheerio');
+const crypto = require('crypto');
 
 class ContentIndexer {
     constructor() {
@@ -12,10 +13,12 @@ class ContentIndexer {
 
     async initialize() {
         const dataDir = path.join(__dirname, 'data');
+        const cacheDir = path.join(__dirname, 'data', 'cache', 'online');
         try {
             await fs.mkdir(dataDir, { recursive: true });
+            await fs.mkdir(cacheDir, { recursive: true });
         } catch (err) {
-            // Directory exists
+            // Directories exist
         }
 
         try {
@@ -715,7 +718,7 @@ class ContentIndexer {
         );
     }
 
-    // FÖRBÄTTRAD SÖKALGORITM v3.0
+    // SEARCH-ALGORITHM
     search(query, options = {}) {
         const searchTerm = query.toLowerCase().trim();
         const results = [];
@@ -730,37 +733,37 @@ class ContentIndexer {
             const contentLower = page.content;
             const urlLower = page.url.toLowerCase();
             
-            // 1. EXAKT TITEL-MATCH (högst vikt)
+            // 1. EXACT TITLE (highest weight)
             if (titleLower === searchTerm) {
                 score += 100;
                 matchType = 'exact_title';
             }
-            // 2. TITEL INNEHÅLLER SÖKTERM
+            // 2. TITLE CONTAINS SEARCHTERM
             else if (titleLower.includes(searchTerm)) {
-                score += 100;
+                score += 50;
                 matchType = 'title_contains';
             }
             
-            // 3. SIDNAMN-MATCH (from URL)
+            // 3. PAGENAME-MATCH (from URL)
             if (pageNameLower.includes(searchTerm)) {
                 score += 30;
                 if (!matchType) matchType = 'page_name';
             }
             
-            // 4. URL-MATCH (viktigt för specifika pages)
+            // 4. URL-MATCH (important for specific pages)
             if (urlLower.includes(searchTerm)) {
-                score += 10;
+                score += 20;
                 if (!matchType) matchType = 'url';
             }
             
-            // 5. INNEHÅLLS-MATCH
+            // 5. CONTENT-MATCH
             const occurrences = (contentLower.match(new RegExp(searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi')) || []).length;
             if (occurrences > 0) {
-                score += occurrences * 1;
+                score += occurrences * 2;
                 if (!matchType) matchType = 'content';
             }
             
-            // 6. FUZZY MATCH (för felstavningar)
+            // 6. FUZZY MATCH (for miss-spellings)
             if (fuzzyMatch && score === 0) {
                 const fuzzyScore = this.fuzzySearch(searchTerm, titleLower) +
                                   this.fuzzySearch(searchTerm, pageNameLower);
@@ -770,7 +773,7 @@ class ContentIndexer {
                 }
             }
             
-            // 7. BOOST FÖR KORTARE TITLAR (mer relevanta)
+            // 7. BOOST FOR SHORTER TITLES (more relevant)
             if (score > 0 && titleLower.length < 50) {
                 score += 5;
             }
@@ -785,13 +788,13 @@ class ContentIndexer {
             }
         }
 
-        // Sortera efter relevans
+        // Sort after relevance
         results.sort((a, b) => b.relevance_score - a.relevance_score);
         
         return results;
     }
 
-    // Enkel fuzzy search (Levenshtein-liknande)
+    // Easy fuzzy search (Levenshtein-similar)
     fuzzySearch(pattern, text) {
         if (pattern.length === 0) return 0;
         if (text.includes(pattern)) return 1;
@@ -807,6 +810,144 @@ class ContentIndexer {
         }
         
         return matches / pattern.length;
+    }
+
+    // ============ OFFLINE CACHE METHODS ============
+    
+    hashUrl(url) {
+        return crypto.createHash('md5').update(url).digest('hex');
+    }
+
+    removeImages(html) {
+        const $ = cheerio.load(html);
+        
+        // Remove all images to save space
+        $('img').remove();
+        $('picture').remove();
+        $('svg').remove();
+        $('video').remove();
+        $('audio').remove();
+        
+        // Remove lazy loading attributes
+        $('[data-src]').removeAttr('data-src');
+        $('[srcset]').removeAttr('srcset');
+        
+        return $.html();
+    }
+
+    async getCacheSize(dir) {
+        try {
+            let totalSize = 0;
+            const files = await fs.readdir(dir);
+            for (const file of files) {
+                if (file === 'metadata.json') continue;
+                const stats = await fs.stat(path.join(dir, file));
+                totalSize += stats.size;
+            }
+            return (totalSize / 1024 / 1024).toFixed(2); // MB
+        } catch (error) {
+            return '0.00';
+        }
+    }
+
+    async saveCacheMetadata(sourceId, metadata) {
+        const cacheDir = path.join(__dirname, 'data', 'cache', 'online', sourceId);
+        await fs.mkdir(cacheDir, { recursive: true });
+        const metaPath = path.join(cacheDir, 'metadata.json');
+        await fs.writeFile(metaPath, JSON.stringify(metadata, null, 2), 'utf-8');
+    }
+
+    async cacheSourcePages(source, pages) {
+        const cacheDir = path.join(__dirname, 'data', 'cache', 'online', source.id);
+        await fs.mkdir(cacheDir, { recursive: true });
+        
+        console.log(`  💾 Caching pages for offline use...`);
+        
+        let cached = 0;
+        let failed = 0;
+        
+        for (let i = 0; i < pages.length; i++) {
+            const page = pages[i];
+            
+            try {
+                // Fetch full HTML
+                const html = await this.fetchPage(page.url);
+                if (!html) {
+                    failed++;
+                    continue;
+                }
+                
+                // Remove images to save space
+                const cleanHtml = this.removeImages(html);
+                
+                // Generate hash for filename
+                const hash = this.hashUrl(page.url);
+                const cachePath = path.join(cacheDir, `${hash}.html`);
+                
+                await fs.writeFile(cachePath, cleanHtml, 'utf-8');
+                
+                // Store cache metadata in page
+                page.cache_path = cachePath;
+                page.cache_hash = hash;
+                page.cached_at = new Date().toISOString();
+                page.is_cached = true;
+                
+                cached++;
+                
+                // Progress indicator
+                if ((i + 1) % 10 === 0 || i === pages.length - 1) {
+                    console.log(`    Cached ${cached}/${pages.length} pages...`);
+                }
+                
+                // Small delay to avoid hammering server
+                await new Promise(resolve => setTimeout(resolve, 200));
+                
+            } catch (error) {
+                console.error(`    ❌ Cache failed for: ${page.title}`);
+                failed++;
+            }
+        }
+        
+        const sizeInMB = await this.getCacheSize(cacheDir);
+        
+        console.log(`    ✅ Cached ${cached}/${pages.length} pages (${failed} failed)`);
+        console.log(`    💾 Total size: ${sizeInMB} MB`);
+        
+        // Save metadata
+        await this.saveCacheMetadata(source.id, {
+            source_name: source.name,
+            source_id: source.id,
+            total_pages: pages.length,
+            cached_pages: cached,
+            failed_pages: failed,
+            cached_at: new Date().toISOString(),
+            size_mb: parseFloat(sizeInMB)
+        });
+        
+        return { cached, failed, size_mb: sizeInMB };
+    }
+
+    async getCacheStatus() {
+        const cacheDir = path.join(__dirname, 'data', 'cache', 'online');
+        const status = [];
+        
+        try {
+            const sources = await fs.readdir(cacheDir);
+            
+            for (const sourceId of sources) {
+                try {
+                    const metaPath = path.join(cacheDir, sourceId, 'metadata.json');
+                    const metadata = JSON.parse(await fs.readFile(metaPath, 'utf-8'));
+                    status.push(metadata);
+                } catch (e) {
+                    // No metadata for this source
+                }
+            }
+        } catch (error) {
+            // Cache directory doesn't exist yet
+        }
+        
+        return status;
     }
 
     getIndexInfo() {
@@ -828,6 +969,110 @@ if (require.main === module) {
         
         if (command === 'build' || command === 'rebuild') {
             await indexer.buildIndex();
+        } else if (command === 'cache') {
+            // NEW: Cache offline sources
+            console.log('\n💾 Starting offline caching...\n');
+            const sources = await indexer.loadSources();
+            const offlineSources = sources.online.filter(s => s.cache_offline === true);
+            
+            if (offlineSources.length === 0) {
+                console.log('⚠️  No sources configured for offline caching');
+                console.log('💡 Add "cache_offline": true to sources in sources.json');
+                console.log('\nExample:');
+                console.log('  {');
+                console.log('    "id": "hacktricks",');
+                console.log('    "name": "HackTricks",');
+                console.log('    "cache_offline": true  ← Add this');
+                console.log('  }');
+                return;
+            }
+            
+            if (offlineSources.length > 5) {
+                console.log(`❌ Too many sources configured for caching!`);
+                console.log(`   Configured: ${offlineSources.length}`);
+                console.log(`   Maximum allowed: 5`);
+                console.log(`   \n💡 Please reduce to 5 or fewer sources for caching`);
+                return;
+            }
+            
+            console.log(`📦 Found ${offlineSources.length} source(s) to cache:`);
+            offlineSources.forEach(s => console.log(`   - ${s.name} (${s.id})`));
+            console.log();
+            
+            let totalCached = 0;
+            let totalSize = 0;
+            
+            for (const source of offlineSources) {
+                console.log(`\n📚 Processing ${source.name}...`);
+                
+                // Index the source
+                let pages = [];
+                if (source.type === 'gitbook') {
+                    pages = await indexer.indexGitBookSource(source);
+                } else if (source.type === 'docusaurus') {
+                    pages = await indexer.indexDocusaurusSource(source);
+                } else if (source.type === 'markdown') {
+                    pages = await indexer.indexMarkdownSource(source);
+                }
+                
+                if (pages.length > 0) {
+                    // Cache the pages
+                    const result = await indexer.cacheSourcePages(source, pages);
+                    totalCached += result.cached;
+                    totalSize += parseFloat(result.size_mb);
+                    
+                    // Remove old pages from this source (if re-caching)
+                    indexer.index.pages = indexer.index.pages.filter(p => p.source_id !== source.id);
+        
+                    // Add newly cached pages to index
+                    indexer.index.pages.push(...pages);
+                }
+            }
+
+            // Update sources metadata (so UI can display cached sources)
+            indexer.index.sources = offlineSources.map(s => ({
+                id: s.id,
+                name: s.name,
+                type: s.type,
+                description: s.description || '',
+                page_count: indexer.index.pages.filter(p => p.source_id === s.id).length,
+                is_local: false  // Cached sources are online sources
+            }));
+            
+            indexer.index.last_updated = new Date().toISOString();
+            
+            await indexer.saveIndex();
+            
+            console.log('\n✅ Offline caching complete!');
+            console.log(`   Total cached: ${totalCached} pages`);
+            console.log(`   Total size: ${totalSize.toFixed(2)} MB`);
+            
+        } else if (command === 'cache-status') {
+            // NEW: Show cache status
+            console.log('\n📊 Offline Cache Status:\n');
+            const status = await indexer.getCacheStatus();
+            
+            if (status.length === 0) {
+                console.log('  No cached sources found.');
+                console.log('  Run: npm run cache');
+            } else {
+                let totalSize = 0;
+                let totalPages = 0;
+                
+                status.forEach(s => {
+                    console.log(`📦 ${s.source_name} (${s.source_id})`);
+                    console.log(`   Cached: ${s.cached_pages}/${s.total_pages} pages`);
+                    console.log(`   Size: ${s.size_mb} MB`);
+                    console.log(`   Last cached: ${new Date(s.cached_at).toLocaleString()}`);
+                    console.log();
+                    
+                    totalSize += s.size_mb;
+                    totalPages += s.cached_pages;
+                });
+                
+                console.log(`Total: ${totalPages} pages, ${totalSize.toFixed(2)} MB`);
+            }
+            
         } else if (command === 'update' && process.argv[3]) {
             const filePath = process.argv[3];
             await indexer.updateLocalFile(filePath);
@@ -867,8 +1112,10 @@ if (require.main === module) {
             console.log('\n📚 PRS Indexer\n');
             console.log('Usage:');
             console.log('  node indexer.js build              - Rebuild entire index');
+            console.log('  node indexer.js cache              - Cache offline sources');
+            console.log('  node indexer.js cache-status       - Show cache status');
             console.log('  node indexer.js update <filepath>  - Update a local file');
-            console.log('  node indexer.js remove <filepath>  - Remove a file from the index');
+            console.log('  node indexer.js remove <filepath>  - Remove file from index');
             console.log('  node indexer.js search <term>      - Search in index');
             console.log('  node indexer.js info               - Show index information\n');
         }

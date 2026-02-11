@@ -14,6 +14,7 @@ Idea by me, implemented with help from Claude.
 - Source overview on the homepage
 - Snippet previews with context
 - Fuzzy search for typos (used as fallback)
+- Supports offline caching for sources including offline-preview.
 
 ## 🔢 How Results Are Ranked
 
@@ -42,12 +43,18 @@ Supports:
 
 - Online: GitBook, Docusaurus, Markdown sites
 - Offline: Local markdown files
+- Sources can be chosen for offline-mode by adding the `"cache_offline":true`
 
 ### Add a source
 1. Edit `sources.json`
 2. Add an online or offline source
 3. Run the indexer
 4. Restart the server
+
+### Offline caching a online source
+1. Add `"cache_offline":true` in the relevant source in the `sources.json` file.
+2. Run `npm run cache` to cache the online source
+3. Start the server
 
 ## 🚀 Quick Start
 ```
