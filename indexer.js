@@ -718,7 +718,7 @@ class ContentIndexer {
         );
     }
 
-    // FÖRBÄTTRAD SÖKALGORITM v3.0
+    // SEARCH-ALGORITHM
     search(query, options = {}) {
         const searchTerm = query.toLowerCase().trim();
         const results = [];
@@ -733,37 +733,37 @@ class ContentIndexer {
             const contentLower = page.content;
             const urlLower = page.url.toLowerCase();
             
-            // 1. EXAKT TITEL-MATCH (högst vikt)
+            // 1. EXACT TITLE (highest weight)
             if (titleLower === searchTerm) {
                 score += 100;
                 matchType = 'exact_title';
             }
-            // 2. TITEL INNEHÅLLER SÖKTERM
+            // 2. TITLE CONTAINS SEARCHTERM
             else if (titleLower.includes(searchTerm)) {
                 score += 50;
                 matchType = 'title_contains';
             }
             
-            // 3. SIDNAMN-MATCH (from URL)
+            // 3. PAGENAME-MATCH (from URL)
             if (pageNameLower.includes(searchTerm)) {
                 score += 30;
                 if (!matchType) matchType = 'page_name';
             }
             
-            // 4. URL-MATCH (viktigt för specifika pages)
+            // 4. URL-MATCH (important for specific pages)
             if (urlLower.includes(searchTerm)) {
                 score += 20;
                 if (!matchType) matchType = 'url';
             }
             
-            // 5. INNEHÅLLS-MATCH
+            // 5. CONTENT-MATCH
             const occurrences = (contentLower.match(new RegExp(searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi')) || []).length;
             if (occurrences > 0) {
                 score += occurrences * 2;
                 if (!matchType) matchType = 'content';
             }
             
-            // 6. FUZZY MATCH (för felstavningar)
+            // 6. FUZZY MATCH (for miss-spellings)
             if (fuzzyMatch && score === 0) {
                 const fuzzyScore = this.fuzzySearch(searchTerm, titleLower) +
                                   this.fuzzySearch(searchTerm, pageNameLower);
@@ -773,7 +773,7 @@ class ContentIndexer {
                 }
             }
             
-            // 7. BOOST FÖR KORTARE TITLAR (mer relevanta)
+            // 7. BOOST FOR SHORTER TITLES (more relevant)
             if (score > 0 && titleLower.length < 50) {
                 score += 5;
             }
@@ -788,13 +788,13 @@ class ContentIndexer {
             }
         }
 
-        // Sortera efter relevans
+        // Sort after relevance
         results.sort((a, b) => b.relevance_score - a.relevance_score);
         
         return results;
     }
 
-    // Enkel fuzzy search (Levenshtein-liknande)
+    // Easy fuzzy search (Levenshtein-similar)
     fuzzySearch(pattern, text) {
         if (pattern.length === 0) return 0;
         if (text.includes(pattern)) return 1;
