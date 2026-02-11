@@ -1,11 +1,14 @@
 {
   "name": "pentest-reference-search",
+  "version": "1.0",
   "description": "Optimized indexed search for pentest reference sites with fuzzy search and advanced scoring",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "index": "node indexer.js build",
-    "update": "node indexer.js update",
+    "update": "node indexer.js update",'
+    "cache": "node indexer.js cache",
+    "cache-status": "node indexer.js cache-status",
     "remove": "node indexer.js remove",
     "search": "node indexer.js search",
     "info": "node indexer.js info"
