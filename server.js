@@ -69,8 +69,6 @@ app.post('/api/search', (req, res) => {
         }
     }
     
-    console.log('Search request:', { query, fuzzyMode, fuzzyEnabled, fuzzyPrefer });
-    
     if (!indexReady) {
         return res.status(503).json({
             error: 'Index not ready. Run "npm run index" först.',
