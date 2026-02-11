@@ -11,34 +11,34 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
-// Initiera indexer
+// Initiate indexer
 const indexer = new ContentIndexer();
 let indexReady = false;
 
-// Ladda index vid start
+// Load index at start
 (async () => {
     try {
         await indexer.initialize();
         const info = indexer.getIndexInfo();
         
         if (info.total_pages > 0) {
-            console.log(`\n✅ Index laddat med ${info.total_pages} sidor`);
-            console.log(`📅 Senast uppdaterat: ${info.last_updated || 'Aldrig'}`);
-            console.log(`📚 Källor:`);
+            console.log(`\n✅ Index loaded with ${info.total_pages} sidor`);
+            console.log(`📅 Last updated: ${info.last_updated || 'Aldrig'}`);
+            console.log(`📚 Sources:`);
             info.sources.forEach(s => {
                 console.log(`   - ${s.name}: ${s.page_count} sidor`);
             });
             console.log();
             indexReady = true;
         } else {
-            console.log('\n⚠️  Index är tomt. Kör "npm run index" för att bygga indexet.\n');
+            console.log('\n⚠️  Index is empty.\n');
         }
     } catch (error) {
-        console.error('❌ Fel vid laddning av index:', error.message);
+        console.error('❌ Error at loading av index:', error.message);
     }
 })();
 
-// API: Hämta status och källor
+// API: Get status and sources
 app.get('/api/status', (req, res) => {
     const info = indexer.getIndexInfo();
     res.json({
@@ -48,7 +48,7 @@ app.get('/api/status', (req, res) => {
     });
 });
 
-// API: Sök
+// API: Search
 app.post('/api/search', (req, res) => {
     const { query, fuzzy = true } = req.body;
     
@@ -69,7 +69,7 @@ app.post('/api/search', (req, res) => {
         const results = indexer.search(query, { fuzzy });
         const searchTime = Date.now() - startTime;
         
-        // Begränsa till top 50 resultat för bättre prestanda
+        // Limit to top 50 results for better performance
         const topResults = results.slice(0, 50).map(r => ({
             source_name: r.source_name,
             source_id: r.source_id,
@@ -94,7 +94,7 @@ app.post('/api/search', (req, res) => {
             total_searched: indexer.index.pages.length
         });
     } catch (error) {
-        console.error('Sökfel:', error);
+        console.error('Search error:', error);
         res.status(500).json({
             error: 'Fel vid sökning',
             results: [],
@@ -103,7 +103,7 @@ app.post('/api/search', (req, res) => {
     }
 });
 
-// API: Hämta alla källor
+// API: Get all sources
 app.get('/api/sources', (req, res) => {
     const info = indexer.getIndexInfo();
     res.json({
@@ -112,7 +112,7 @@ app.get('/api/sources', (req, res) => {
     });
 });
 
-// API: Preview lokal markdown-fil
+// API: Preview local markdown-file
 app.get('/api/preview', async (req, res) => {
     const { file } = req.query;
     
@@ -284,26 +284,26 @@ app.get('/api/cache-status', async (req, res) => {
     }
 });
 
-// API: Bygg om index (async)
+// API: Rebuild index (async)
 app.post('/api/rebuild-index', async (req, res) => {
     if (!indexReady) {
         return res.status(503).json({
-            error: 'Indexering pågår redan eller kan inte startas'
+            error: 'Indexing already running or can not be started'
         });
     }
 
     try {
-        console.log('🔄 Startar ombyggnad av index...');
-        res.json({ message: 'Indexering startad i bakgrunden' });
+        console.log('🔄 Starting rebuilding of index...');
+        res.json({ message: 'Indexing started in background' });
         
         indexReady = false;
         await indexer.buildIndex();
         indexReady = true;
         
-        console.log('✅ Index ombyggt!');
+        console.log('✅ Index rebuilt!');
     } catch (error) {
-        console.error('❌ Fel vid ombyggnad:', error);
-        indexReady = true; // Återställ status
+        console.error('❌ Error at rebuilding:', error);
+        indexReady = true; // Restore status
     }
 });
 
@@ -318,17 +318,17 @@ app.get('/health', (req, res) => {
 
 app.listen(PORT, () => {
     console.log(`\n✅ PRS Server started`);
-    console.log(`🌐 Server körs på http://localhost:${PORT}`);
-    console.log(`📂 Öppna http://localhost:${PORT} i din webbläsare\n`);
+    console.log(`🌐 Server is being run at:  http://localhost:${PORT}`);
+    console.log(`📂 Open http://localhost:${PORT} in your web-browser\n`);
     
     if (!indexReady) {
-        console.log('⚠️  OBS: Index är inte redo!');
-        console.log('   Kör: npm run index\n');
+        console.log('⚠️  OBS: Index is not ready!');
+        console.log('   Run: npm run index\n');
     }
 });
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
-    console.log('\n🛑 Stänger ner servern...');
+    console.log('\n🛑 Shutting down the server...');
     process.exit(0);
 });
