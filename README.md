@@ -1,4 +1,4 @@
-# 🔍 Pentest - Knowledge Base Indexer (P-KBI)
+# 🔍 Pentest Knowledge Base Indexer (PKBI)
 
 A fast local tool for searching indexed knowledge base pages for pentesting documentation.
 
