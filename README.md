@@ -1,11 +1,10 @@
-# 🔍 Pentesting Reference Search (PRS)
+# 🔍 Pentest - Knowledge Base Indexer (P-KBI)
 
-A fast local search tool for pentesting documentation.
+A fast local tool for searching indexed knowledge base pages for pentesting documentation.
 
 Works with online docs or local markdown files.
- 
-Idea by me, implemented with help from Claude.
 
+Feel free to use if for your own needs, for other type of information.
 ## ✨ Features
 
 - Fast indexing and search

@@ -1,7 +1,7 @@
 {
-  "name": "pentest-reference-search",
+  "name": "pentest-knowledge-base-indexer",
   "version": "1.0",
-  "description": "Optimized indexed search for pentest reference sites with fuzzy search and advanced scoring",
+  "description": "Optimized indexed search for pentest knowledge base with fuzzy search and advanced scoring",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
