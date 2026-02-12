@@ -1,9 +1,11 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pentest Knowledge Base Indexer(PKBI)</title>
+    <title>Pentest KB Indexer(PKBI)</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <style>
         * {
             margin: 0;
@@ -261,8 +263,13 @@
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
         /* Results Info */
@@ -454,8 +461,8 @@
 
         .tips-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 10px;
             max-width: 800px;
             margin: 0 auto;
         }
@@ -463,31 +470,46 @@
         .tip-card {
             background: #161b22;
             border: 1px solid #30363d;
-            border-radius: 8px;
-            padding: 20px;
+            border-radius: 6px;
+            padding: 10px 14px;
+            /* ← Mindre padding */
             text-align: left;
         }
 
         .tip-card h3 {
             color: #58a6ff;
-            font-size: 15px;
-            margin-bottom: 10px;
+            font-size: 14px;
+            /* ← Mindre font */
+            margin-bottom: 6px;
         }
 
         .tip-examples {
             color: #8b949e;
-            font-size: 14px;
-            line-height: 1.8;
+            font-size: 13px;
+            line-height: 1.6;
         }
 
         .tip-example {
             display: inline-block;
             background: #0d1117;
-            padding: 4px 8px;
-            border-radius: 4px;
-            margin: 2px;
+            padding: 2px 6px;
+            /* ← Mindre padding */
+            border-radius: 3px;
+            margin: 1px;
+            /* ← Mindre margin */
             font-family: 'Courier New', monospace;
+            font-size: 12px;
+            /* ← Mindre font */
             color: #58a6ff;
+        }
+
+        .tips-title {
+            font-size: 16px;
+            /* ← Mindre titel */
+            color: #c9d1d9;
+            margin-bottom: 16px;
+            /* ← Mindre margin */
+            font-weight: 600;
         }
 
         /* Error */
@@ -533,8 +555,13 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
         }
 
         .modal-content {
@@ -686,7 +713,8 @@
             color: #c9d1d9;
         }
 
-        .markdown-content ul, .markdown-content ol {
+        .markdown-content ul,
+        .markdown-content ol {
             margin-bottom: 16px;
             padding-left: 24px;
         }
@@ -717,7 +745,8 @@
             margin-bottom: 16px;
         }
 
-        .markdown-content th, .markdown-content td {
+        .markdown-content th,
+        .markdown-content td {
             border: 1px solid #30363d;
             padding: 8px 12px;
             text-align: left;
@@ -729,40 +758,69 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="header">
-           <h1>🔍 PKBI</h1>
+            <h1>📖 PKBI</h1>
         </div>
 
         <!-- Search -->
         <div class="search-box">
-            <input 
-                type="text" 
-                id="searchInput" 
-                placeholder="Search for anything..."
-                autocomplete="off"
-            >
+            <input type="text" id="searchInput" placeholder="🔍 Search for anything..." autocomplete="off">
             <div class="search-hint">💡 Tips: Try misspellings - fuzzy search will still find it!</div>
         </div>
 
         <!-- Fuzzy Search Mode -->
-        <div class="fuzzy-options" style="margin-top: 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 24px; justify-content: center;">
-            <span style="color: #8b949e; font-size: 14px; font-weight: 500;">Fuzzy search:</span>
-            
-            <label style="display: flex; align-items: center; gap: 8px; color: #8b949e; font-size: 14px; cursor: pointer;">
-                <input type="radio" name="fuzzyMode" value="off" style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent-blue);">
+        <div class="fuzzy-options"
+            style="margin-top: 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 24px; justify-content: center;">
+            <span style="color: #8b949e; font-size: 16px; font-weight: 500;">Fuzzy search:</span>
+
+            <label
+                style="display: flex; align-items: center; gap: 8px; color: #8b949e; font-size: 16px; cursor: pointer;">
+                <input type="radio" name="fuzzyMode" value="off"
+                    style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent-blue);">
                 <span>Off</span>
             </label>
-            
-            <label style="display: flex; align-items: center; gap: 8px; color: #8b949e; font-size: 14px; cursor: pointer;">
-                <input type="radio" name="fuzzyMode" value="normal" checked style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent-blue);">
+
+            <label
+                style="display: flex; align-items: center; gap: 8px; color: #8b949e; font-size: 16px; cursor: pointer;">
+                <input type="radio" name="fuzzyMode" value="normal" checked
+                    style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent-blue);">
                 <span>Normal</span>
             </label>
-            
-            <label style="display: flex; align-items: center; gap: 8px; color: #8b949e; font-size: 14px; cursor: pointer;">
-                <input type="radio" name="fuzzyMode" value="prefer" style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent-blue);">
+
+            <label
+                style="display: flex; align-items: center; gap: 8px; color: #8b949e; font-size: 16px; cursor: pointer;">
+                <input type="radio" name="fuzzyMode" value="prefer"
+                    style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent-blue);">
                 <span>Prefer</span>
+            </label>
+        </div>
+
+        <div class="source-options"
+            style="margin-top: 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 24px; justify-content: center;">
+            <span style="color: #8b949e; font-size: 16px; font-weight: 500;">Show:</span>
+
+            <label
+                style="display: flex; align-items: center; gap: 8px; color: #8b949e; font-size: 16px; cursor: pointer;">
+                <input type="radio" name="sourceMode" value="all" checked
+                    style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent-blue);">
+                <span>All</span>
+            </label>
+
+            <label
+                style="display: flex; align-items: center; gap: 8px; color: #8b949e; font-size: 16px; cursor: pointer;">
+                <input type="radio" name="sourceMode" value="local"
+                    style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent-blue);">
+                <span>📁 Local</span>
+            </label>
+
+            <label
+                style="display: flex; align-items: center; gap: 8px; color: #8b949e; font-size: 16px; cursor: pointer;">
+                <input type="radio" name="sourceMode" value="online"
+                    style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent-blue);">
+                <span>🌐 Online</span>
             </label>
         </div>
 
@@ -812,7 +870,7 @@
                     <div class="tip-examples">
                         <span class="tip-example">windows enum</span>
                         <span class="tip-example">linux privesc</span>
-                        <span class="tip-example">active directory</span>
+                        <span class="tip-example">lateral movement</span>
                     </div>
                 </div>
                 <div class="tip-card">
@@ -822,6 +880,7 @@
                         <span class="tip-example">metasploit</span>
                         <span class="tip-example">burp</span>
                         <span class="tip-example">john</span>
+                        <span class="tip-example">dirbuster</span>
                     </div>
                 </div>
             </div>
@@ -876,11 +935,12 @@
         const resultsCount = document.getElementById('resultsCount');
         const searchStats = document.getElementById('searchStats');
         const collapseArrow = document.getElementById('collapseArrow');
-        
+
         let searchTimeout;
         let sourcesCollapsed = false;
         let currentFilePath = null;
-        let fuzzyMode = 'normal';  // 'off', 'normal', 'prefer'
+        let fuzzyMode = 'normal';   // 'off', 'normal', 'prefer'
+        let sourceMode = 'all';     // 'all', 'local', 'online'
 
         // Load saved fuzzy preference
         const savedFuzzyMode = localStorage.getItem('fuzzyMode');
@@ -890,11 +950,20 @@
             if (radio) radio.checked = true;
         }
 
+        // Load saved preference
+        const savedSourceMode = localStorage.getItem('sourceMode');
+        if (savedSourceMode) {
+            sourceMode = savedSourceMode;
+            const radio = document.querySelector(`input[name="sourceMode"][value="${savedSourceMode}"]`);
+            if (radio) radio.checked = true;
+        }
+
+
         // Update hint text based on fuzzy mode
         function updateFuzzyHint() {
             const hint = document.getElementById('searchHint');
             if (!hint) return;
-            
+
             if (fuzzyMode === 'off') {
                 hint.textContent = '🎯 Exact search only - results must match precisely';
             } else if (fuzzyMode === 'normal') {
@@ -910,7 +979,7 @@
                 fuzzyMode = e.target.value;
                 localStorage.setItem('fuzzyMode', fuzzyMode);
                 updateFuzzyHint();
-                
+
                 // Re-search if there's an active query
                 if (searchInput.value.trim()) {
                     performSearch(searchInput.value.trim());
@@ -921,6 +990,19 @@
 
         // Set initial hint
         updateFuzzyHint();
+
+        // Listen for changes
+        document.querySelectorAll('input[name="sourceMode"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                sourceMode = e.target.value;
+                localStorage.setItem('sourceMode', sourceMode);
+
+                // Re-filter without new server request
+                if (allSearchResults.length > 0) {
+                    displayResults(filterResults(allSearchResults));
+                }
+            });
+        });
 
         // Toggle sources collapse
         function toggleSources() {
@@ -941,16 +1023,16 @@
             const modalTitle = document.getElementById('modalTitle');
             const modalSubtitle = document.getElementById('modalSubtitle');
             const modalContent = document.getElementById('modalContent');
-            
+
             modal.style.display = 'block';
             modalTitle.textContent = title;
             modalSubtitle.textContent = `📁 ${pageName}`;
             modalContent.innerHTML = '<p style="text-align: center; color: #8b949e;">Loading...</p>';
-            
+
             try {
                 const response = await fetch(`/api/preview?file=${encodeURIComponent(filePath)}`);
                 const data = await response.json();
-                
+
                 if (data.error) {
                     modalContent.innerHTML = `<p style="color: #f85149;">Error: ${data.error}</p>`;
                 } else {
@@ -972,16 +1054,16 @@
             const modalTitle = document.getElementById('modalTitle');
             const modalSubtitle = document.getElementById('modalSubtitle');
             const modalContent = document.getElementById('modalContent');
-            
+
             modal.style.display = 'block';
             modalTitle.textContent = title + ' (Offline)';
             modalSubtitle.textContent = `📱 Cached from ${sourceId}`;
             modalContent.innerHTML = '<p style="text-align: center; color: #8b949e;">Loading cached page...</p>';
-            
+
             try {
                 const response = await fetch(`/api/cached-page?source_id=${encodeURIComponent(sourceId)}&url=${encodeURIComponent(url)}`);
                 const data = await response.json();
-                
+
                 if (data.error) {
                     modalContent.innerHTML = `
                         <div style="text-align: center; padding: 40px;">
@@ -1013,7 +1095,7 @@
         }
 
         // Close modal on background click
-        window.onclick = function(event) {
+        window.onclick = function (event) {
             const modal = document.getElementById('previewModal');
             if (event.target === modal) {
                 closePreview();
@@ -1021,39 +1103,39 @@
         };
 
         // Close modal on Escape key
-        document.addEventListener('keydown', function(event) {
+        document.addEventListener('keydown', function (event) {
             if (event.key === 'Escape') {
                 closePreview();
             }
         });
 
- async function loadSources() {
-    try {
-        const response = await fetch('/api/sources');
-        const data = await response.json();
-        
-        // Load cache status
-        const cacheResponse = await fetch('/api/cache-status');
-        const cacheData = await cacheResponse.json();
-        const cacheMap = {};
-        
-        // Create map of cached sources
-        if (cacheData.sources) {
-            cacheData.sources.forEach(s => {
-                cacheMap[s.source_id] = s;
-            });
-        }
-        
-        if (data.sources && data.sources.length > 0) {
-            sourcesCount.textContent = `${data.total} sources`;
-            
-            sourcesGrid.innerHTML = data.sources.map(source => {
-                const cacheInfo = cacheMap[source.id];
-                const cacheBadge = cacheInfo
-                    ? `<span class="cache-badge" style="background: #1f6feb; color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px;">Cached</span>`
-                    : '';
-                
-                return `
+        async function loadSources() {
+            try {
+                const response = await fetch('/api/sources');
+                const data = await response.json();
+
+                // Load cache status
+                const cacheResponse = await fetch('/api/cache-status');
+                const cacheData = await cacheResponse.json();
+                const cacheMap = {};
+
+                // Create map of cached sources
+                if (cacheData.sources) {
+                    cacheData.sources.forEach(s => {
+                        cacheMap[s.source_id] = s;
+                    });
+                }
+
+                if (data.sources && data.sources.length > 0) {
+                    sourcesCount.textContent = `${data.total} sources`;
+
+                    sourcesGrid.innerHTML = data.sources.map(source => {
+                        const cacheInfo = cacheMap[source.id];
+                        const cacheBadge = cacheInfo
+                            ? `<span class="cache-badge" style="background: #1f6feb; color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px;">Cached</span>`
+                            : '';
+
+                        return `
                     <div class="source-card">
                         <div class="source-name">
                             ${escapeHtml(source.name)}
@@ -1067,15 +1149,15 @@
                         </div>
                     </div>
                 `;
-            }).join('');
-        } else {
-            sourcesSection.style.display = 'none';
+                    }).join('');
+                } else {
+                    sourcesSection.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Could not load sources:', error);
+                sourcesSection.style.display = 'none';
+            }
         }
-    } catch (error) {
-        console.error('Could not load sources:', error);
-        sourcesSection.style.display = 'none';
-    }
-}
 
         // Search functionality
         searchInput.addEventListener('input', (e) => {
@@ -1146,8 +1228,9 @@
                     resultsInfo.style.display = 'block';
                     resultsCount.innerHTML = `<strong>${data.count}</strong> results for "<strong>${escapeHtml(query)}</strong>"`;
                     searchStats.textContent = `Searched through ${data.total_searched} sidor in ${data.search_time_ms}ms`;
-                    
-                    displayResults(data.results);
+
+                    allSearchResults = data.results;
+                    displayResults(filterResults(allSearchResults));
                 }
             } catch (error) {
                 loadingDiv.style.display = 'none';
@@ -1158,6 +1241,15 @@
                     </div>
                 `;
             }
+        }
+
+        function filterResults(results) {
+            if (sourceMode === 'local') {
+                return results.filter(r => r.is_local === true);
+            } else if (sourceMode === 'online') {
+                return results.filter(r => !r.is_local);
+            }
+            return results;
         }
 
         function displayResults(results) {
@@ -1172,7 +1264,7 @@
                 } else if (isCached) {
                     badge = '<span class="badge" style="background: var(--accent-green);">📱 Cached</span>';
                 }
-                
+
                 // Determine button based on file type
                 let openButton;
                 if (isLocal) {
@@ -1187,7 +1279,7 @@
                 } else {
                     openButton = `<a href="${result.url}" class="open-btn" target="_blank">Open page →</a>`;
                 }
-                
+
                 // Highlight snippet if available
                 let snippetHTML = '';
                 if (result.snippet) {
@@ -1198,7 +1290,7 @@
                         snippetHTML = `<div class="result-snippet">${escapeHtml(result.snippet.text)}</div>`;
                     }
                 }
-                
+
                 return `
                 <div class="result-item">
                     <div class="result-header">
@@ -1266,4 +1358,5 @@
         });
     </script>
 </body>
+
 </html>
