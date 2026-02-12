@@ -1,10 +1,9 @@
 # 🔍 Pentest Knowledge Base Indexer (PKBI)
 
-A fast local tool for searching indexed knowledge base pages for pentesting documentation.
+A fast local tool for searching indexed pages of pentesting documentation.
 
-Works with online docs or local markdown files.
+Feel free to use if for your own needs, for other type of information other than pentest.
 
-Feel free to use if for your own needs, for other type of information.
 ## ✨ Features
 
 - Fast indexing and search
@@ -36,28 +35,47 @@ Higher score = higher result.
 
 ## ➕ Sources
 
-All sources are defined in sources.json.
+All sources are defined in `sources.json`.
 
-Supports:
+### Supports:
 
-- Online: GitBook, Docusaurus, Markdown sites
-- Offline: Local markdown files
-- Sources can be chosen for offline-mode by adding the `"cache_offline":true`
+- Online: 
+    - GitBook
+    - Docusaurus
+    - Markdown pages.
+- Offline: 
+    - Local markdown files
 
-### Add a source
-1. Edit `sources.json`
-2. Add an online or offline source
-3. Run the indexer
-4. Restart the server
+Sources can be chosen for offline-mode by adding the `"cache_offline":true`
 
-### Offline caching a online source
-1. Add `"cache_offline":true` in the relevant source in the `sources.json` file.
-2. Run `npm run cache` to cache the online source
-3. Start the server
 
-## 🚀 Quick Start
-```
+
+
+## 🚀 Getting Started
+
+Follow these steps to set up and run the project locally.
+
+### 1. Install dependencies
+```bash
 npm install
+```
+### 2. Configure sources
+1. Open `sources.json`
+2. Add, enable or disable online and offline sources as needed
+
+### 3 . Index and cache content
+
+After updating your sources, run:
+```bash
+# Index online sources
 npm run index
+
+# Cache content for offline preview
+npm run cache
+```
+Run both commands if you want full online + offline support.
+
+### 4. Start the server
+```bash
 npm start
 ```
