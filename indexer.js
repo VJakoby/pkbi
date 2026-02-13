@@ -480,7 +480,7 @@ class ContentIndexer {
             indexed += chunk.length;
             console.log(`  Indexerade ${indexed}/${linkArray.length} pages (${successful} successful)...`);
             
-            await new Promise(resolve => setTimeout(resolve, 100));
+            await new Promise(resolve => setTimeout(resolve, 1000));
         }
 
         console.log(`  ✅ Indexed total ${pages.length} pages from ${source.name}`);
@@ -613,7 +613,7 @@ class ContentIndexer {
             indexed += chunk.length;
             console.log(`  Indexerade ${indexed}/${source.urls.length} filer (${successful} successful)...`);
             
-            await new Promise(resolve => setTimeout(resolve, 100));
+            await new Promise(resolve => setTimeout(resolve, 1000));
         }
 
         console.log(`  ✅ Indexed total ${pages.length} markdown-filer from ${source.name}`);
@@ -900,7 +900,7 @@ class ContentIndexer {
                 }
                 
                 // Small delay to avoid hammering server
-                await new Promise(resolve => setTimeout(resolve, 200));
+                await new Promise(resolve => setTimeout(resolve, 1000));
                 
             } catch (error) {
                 console.error(`    ❌ Cache failed for: ${page.title}`);
