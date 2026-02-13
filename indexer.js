@@ -527,7 +527,7 @@ class ContentIndexer {
             pages.push(...results.filter(p => p !== null));
             
             console.log(`  Indexerade ${i + chunk.length}/${source.pages.length} pages...`);
-            await new Promise(resolve => setTimeout(resolve, 100));
+            await new Promise(resolve => setTimeout(resolve, 1000));
         }
 
         console.log(`  ✅ Indexerade ${pages.length} pages from ${source.name}`);
