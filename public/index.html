@@ -175,11 +175,87 @@
             border-radius: 6px;
             padding: 14px;
             transition: all 0.2s;
+            position: relative;
         }
 
         .source-card:hover {
             border-color: var(--accent-blue);
             transform: translateY(-2px);
+        }
+
+        /* NYA klasser - lägg till efter .source-card:hover */
+        .source-card.disabled {
+            opacity: 0.45;
+            border-color: var(--border-color) !important;
+            transform: none !important;
+        }
+
+        .source-toggle {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 34px;
+            height: 18px;
+            background: #30363d;
+            border-radius: 18px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .source-toggle::before {
+            content: '';
+            position: absolute;
+            width: 13px;
+            height: 13px;
+            border-radius: 50%;
+            background: #8b949e;
+            top: 2.5px;
+            left: 3px;
+            transition: transform 0.2s, background 0.2s;
+        }
+
+        .source-toggle.active {
+            background: var(--accent-green);
+        }
+
+        .source-toggle.active::before {
+            transform: translateX(15px);
+            background: white;
+        }
+
+        .result-item.keyboard-selected {
+            border-color: var(--accent-blue) !important;
+            box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.3);
+        }
+
+        .keyboard-hint {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 8px 14px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            display: none;
+            gap: 12px;
+            z-index: 100;
+        }
+
+        .keyboard-hint.visible {
+            display: flex;
+        }
+
+        .kbd {
+            display: inline-block;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 3px;
+            padding: 1px 5px;
+            font-size: 11px;
+            color: var(--text-primary);
+            font-family: monospace;
         }
 
         .source-name {
@@ -923,6 +999,12 @@
         </div>
     </div>
 
+    <!-- Keyboard shortcuts hint -->
+    <div class="keyboard-hint" id="keyboardHint">
+        <span><span class="kbd">↑↓</span> Navigate</span>
+        <span><span class="kbd">Esc</span> Clear</span>
+    </div>
+
     <script>
         const searchInput = document.getElementById('searchInput');
         const resultsDiv = document.getElementById('results');
@@ -941,6 +1023,13 @@
         let currentFilePath = null;
         let fuzzyMode = 'normal';   // 'off', 'normal', 'prefer'
         let sourceMode = 'all';     // 'all', 'local', 'online'
+        let allSearchResults = [];
+        let selectedResultIndex = -1;
+
+        // Load saved source enable/disable preference
+        let disabledSources = new Set(
+            JSON.parse(localStorage.getItem('disabledSources') || '[]')
+        );
 
         // Load saved fuzzy preference
         const savedFuzzyMode = localStorage.getItem('fuzzyMode');
@@ -1003,6 +1092,33 @@
                 }
             });
         });
+
+        function toggleSource(sourceId) {
+            if (disabledSources.has(sourceId)) {
+                disabledSources.delete(sourceId);
+            } else {
+                disabledSources.add(sourceId);
+            }
+
+            localStorage.setItem('disabledSources', JSON.stringify([...disabledSources]));
+
+            const card = document.getElementById(`source-card-${sourceId}`);
+            const toggle = card.querySelector('.source-toggle');
+
+            if (disabledSources.has(sourceId)) {
+                card.classList.add('disabled');
+                toggle.classList.remove('active');
+                toggle.title = 'Enable source';
+            } else {
+                card.classList.remove('disabled');
+                toggle.classList.add('active');
+                toggle.title = 'Disable source';
+            }
+
+            if (allSearchResults.length > 0) {
+                displayResults(filterResults(allSearchResults));
+            }
+        }
 
         // Toggle sources collapse
         function toggleSources() {
@@ -1102,10 +1218,43 @@
             }
         };
 
-        // Close modal on Escape key
         document.addEventListener('keydown', function (event) {
             if (event.key === 'Escape') {
-                closePreview();
+                const modal = document.getElementById('previewModal');
+                if (modal.style.display === 'block') {
+                    closePreview();
+                    return;
+                }
+                searchInput.value = '';
+                resultsDiv.innerHTML = '';
+                resultsInfo.style.display = 'none';
+                tipsDiv.style.display = 'block';
+                sourcesSection.style.display = 'block';
+                allSearchResults = [];
+                selectedResultIndex = -1;
+                document.getElementById('keyboardHint').classList.remove('visible');
+                searchInput.focus();
+                return;
+            }
+
+            if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                const resultItems = document.querySelectorAll('.result-item');
+                if (resultItems.length === 0) return;
+
+                event.preventDefault();
+
+                if (selectedResultIndex >= 0 && resultItems[selectedResultIndex]) {
+                    resultItems[selectedResultIndex].classList.remove('keyboard-selected');
+                }
+
+                if (event.key === 'ArrowDown') {
+                    selectedResultIndex = Math.min(selectedResultIndex + 1, resultItems.length - 1);
+                } else {
+                    selectedResultIndex = Math.max(selectedResultIndex - 1, 0);
+                }
+
+                resultItems[selectedResultIndex].classList.add('keyboard-selected');
+                resultItems[selectedResultIndex].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
             }
         });
 
@@ -1130,14 +1279,19 @@
                     sourcesCount.textContent = `${data.total} sources`;
 
                     sourcesGrid.innerHTML = data.sources.map(source => {
+                        const isDisabled = disabledSources.has(source.id);  // ← NY
                         const cacheInfo = cacheMap[source.id];
                         const cacheBadge = cacheInfo
                             ? `<span class="cache-badge" style="background: #1f6feb; color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px;">Cached</span>`
                             : '';
 
                         return `
-                    <div class="source-card">
-                        <div class="source-name">
+                    <div class="source-card ${isDisabled ? 'disabled' : ''}" id="source-card-${source.id}">  <!-- ← NY -->
+                        <div class="source-toggle ${isDisabled ? '' : 'active'}"
+                             onclick="toggleSource('${source.id}')"
+                             title="${isDisabled ? 'Enable source' : 'Disable source'}">
+                        </div>  <!-- ← NY -->
+                        <div class="source-name" style="padding-right: 44px;">  <!-- ← padding-right NY -->
                             ${escapeHtml(source.name)}
                             <span class="source-type">${source.type}</span>
                             ${cacheBadge}
@@ -1164,11 +1318,17 @@
             clearTimeout(searchTimeout);
             const query = e.target.value.trim();
 
+            selectedResultIndex = -1;
+            document.querySelectorAll('.result-item.keyboard-selected')
+                .forEach(el => el.classList.remove('keyboard-selected'));
+
             if (query.length === 0) {
                 resultsDiv.innerHTML = '';
                 resultsInfo.style.display = 'none';
                 tipsDiv.style.display = 'block';
                 sourcesSection.style.display = 'block';
+                allSearchResults = [];
+                document.getElementById('keyboardHint').classList.remove('visible');
                 return;
             }
 
@@ -1230,7 +1390,9 @@
                     searchStats.textContent = `Searched through ${data.total_searched} sidor in ${data.search_time_ms}ms`;
 
                     allSearchResults = data.results;
+                    selectedResultIndex = -1;
                     displayResults(filterResults(allSearchResults));
+                    document.getElementById('keyboardHint').classList.add('visible');
                 }
             } catch (error) {
                 loadingDiv.style.display = 'none';
@@ -1244,12 +1406,15 @@
         }
 
         function filterResults(results) {
+            let filtered = results.filter(r => !disabledSources.has(r.source_id));
+
             if (sourceMode === 'local') {
-                return results.filter(r => r.is_local === true);
+                filtered = filtered.filter(r => r.is_local === true);
             } else if (sourceMode === 'online') {
-                return results.filter(r => !r.is_local);
+                filtered = filtered.filter(r => !r.is_local);
             }
-            return results;
+
+            return filtered;
         }
 
         function displayResults(results) {
