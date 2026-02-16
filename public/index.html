@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -14,7 +14,6 @@
         }
 
         :root {
-            /* Dark mode (default) */
             --bg-primary: #0d1117;
             --bg-secondary: #161b22;
             --bg-tertiary: #21262d;
@@ -183,7 +182,6 @@
             transform: translateY(-2px);
         }
 
-        /* NYA klasser - lägg till efter .source-card:hover */
         .source-card.disabled {
             opacity: 0.45;
             border-color: var(--border-color) !important;
@@ -196,7 +194,7 @@
             right: 10px;
             width: 34px;
             height: 18px;
-            background: #30363d;
+            background: var(--border-color);
             border-radius: 18px;
             cursor: pointer;
             transition: background 0.2s;
@@ -208,7 +206,7 @@
             width: 13px;
             height: 13px;
             border-radius: 50%;
-            background: #8b949e;
+            background: var(--text-secondary);
             top: 2.5px;
             left: 3px;
             transition: transform 0.2s, background 0.2s;
@@ -301,21 +299,21 @@
             width: 100%;
             padding: 18px 24px;
             font-size: 16px;
-            border: 2px solid #30363d;
+            border: 2px solid var(--border-color);
             border-radius: 10px;
-            background: #161b22;
-            color: #c9d1d9;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
             outline: none;
             transition: all 0.3s;
         }
 
         #searchInput:focus {
-            border-color: #58a6ff;
-            box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.1);
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px var(--shadow-color);
         }
 
         .search-hint {
-            color: #8b949e;
+            color: var(--text-secondary);
             font-size: 13px;
             margin-top: 8px;
             text-align: center;
@@ -329,8 +327,8 @@
         }
 
         .spinner {
-            border: 3px solid #30363d;
-            border-top: 3px solid #58a6ff;
+            border: 3px solid var(--border-color);
+            border-top: 3px solid var(--accent-blue);
             border-radius: 50%;
             width: 40px;
             height: 40px;
@@ -339,20 +337,15 @@
         }
 
         @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            100% {
-                transform: rotate(360deg);
-            }
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         /* Results Info */
         .results-info {
             display: none;
-            background: #161b22;
-            border: 1px solid #30363d;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
             border-radius: 8px;
             padding: 12px 20px;
             margin-bottom: 20px;
@@ -367,12 +360,12 @@
         }
 
         .stat {
-            color: #8b949e;
+            color: var(--text-secondary);
             font-size: 14px;
         }
 
         .stat strong {
-            color: #c9d1d9;
+            color: var(--text-primary);
         }
 
         /* Results */
@@ -383,8 +376,8 @@
         }
 
         .result-item {
-            background: #161b22;
-            border: 1px solid #30363d;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
             border-radius: 8px;
             padding: 20px;
             transition: all 0.2s;
@@ -392,9 +385,9 @@
         }
 
         .result-item:hover {
-            border-color: #58a6ff;
+            border-color: var(--accent-blue);
             transform: translateY(-2px);
-            box-shadow: 0 4px 20px rgba(88, 166, 255, 0.15);
+            box-shadow: 0 4px 20px var(--shadow-color);
         }
 
         .result-header {
@@ -412,13 +405,13 @@
         .result-title {
             font-size: 18px;
             font-weight: 600;
-            color: #c9d1d9;
+            color: var(--text-primary);
             margin-bottom: 4px;
             line-height: 1.4;
         }
 
         .result-page-name {
-            color: #58a6ff;
+            color: var(--accent-blue);
             font-size: 13px;
             font-weight: 500;
         }
@@ -443,12 +436,12 @@
         }
 
         .badge-match {
-            background: #238636;
+            background: var(--accent-green);
             color: white;
         }
 
         .result-source {
-            color: #8b949e;
+            color: var(--text-secondary);
             font-size: 13px;
             margin-bottom: 8px;
             display: flex;
@@ -457,18 +450,18 @@
         }
 
         .result-snippet {
-            background: #0d1117;
-            border-left: 3px solid #30363d;
+            background: var(--bg-primary);
+            border-left: 3px solid var(--border-color);
             padding: 10px 12px;
             margin: 12px 0;
-            color: #8b949e;
+            color: var(--text-secondary);
             font-size: 13px;
             line-height: 1.6;
             border-radius: 4px;
         }
 
         .result-link {
-            color: #58a6ff;
+            color: var(--accent-blue);
             text-decoration: none;
             font-size: 13px;
             word-break: break-all;
@@ -484,7 +477,7 @@
 
         .open-btn {
             display: inline-block;
-            background: #238636;
+            background: var(--accent-green);
             color: white;
             padding: 10px 20px;
             border-radius: 6px;
@@ -492,10 +485,12 @@
             font-size: 14px;
             font-weight: 500;
             transition: all 0.2s;
+            border: none;
+            cursor: pointer;
         }
 
         .open-btn:hover {
-            background: #2ea043;
+            background: var(--accent-green-hover);
             transform: translateX(2px);
         }
 
@@ -513,12 +508,12 @@
 
         .no-results-text {
             font-size: 20px;
-            color: #8b949e;
+            color: var(--text-secondary);
             margin-bottom: 10px;
         }
 
         .no-results-hint {
-            color: #8b949e;
+            color: var(--text-secondary);
             font-size: 14px;
         }
 
@@ -529,9 +524,9 @@
         }
 
         .tips-title {
-            font-size: 22px;
-            color: #c9d1d9;
-            margin-bottom: 30px;
+            font-size: 16px;
+            color: var(--text-primary);
+            margin-bottom: 16px;
             font-weight: 600;
         }
 
@@ -544,77 +539,52 @@
         }
 
         .tip-card {
-            background: #161b22;
-            border: 1px solid #30363d;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
             border-radius: 6px;
             padding: 10px 14px;
-            /* ← Mindre padding */
             text-align: left;
         }
 
         .tip-card h3 {
-            color: #58a6ff;
+            color: var(--accent-blue);
             font-size: 14px;
-            /* ← Mindre font */
             margin-bottom: 6px;
         }
 
         .tip-examples {
-            color: #8b949e;
+            color: var(--text-secondary);
             font-size: 13px;
             line-height: 1.6;
         }
 
         .tip-example {
             display: inline-block;
-            background: #0d1117;
+            background: var(--bg-primary);
             padding: 2px 6px;
-            /* ← Mindre padding */
             border-radius: 3px;
             margin: 1px;
-            /* ← Mindre margin */
             font-family: 'Courier New', monospace;
             font-size: 12px;
-            /* ← Mindre font */
-            color: #58a6ff;
-        }
-
-        .tips-title {
-            font-size: 16px;
-            /* ← Mindre titel */
-            color: #c9d1d9;
-            margin-bottom: 16px;
-            /* ← Mindre margin */
-            font-weight: 600;
+            color: var(--accent-blue);
         }
 
         /* Error */
         .error-message {
-            background: #161b22;
-            border: 1px solid #f85149;
+            background: var(--bg-secondary);
+            border: 1px solid var(--accent-red);
             border-radius: 8px;
             padding: 20px;
-            color: #f85149;
+            color: var(--accent-red);
             text-align: center;
         }
 
         /* Responsive */
         @media (max-width: 768px) {
-            h1 {
-                font-size: 2em;
-            }
-
-            .sources-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .result-header {
-                flex-direction: column;
-            }
-
-            .tips-grid {
-                grid-template-columns: 1fr;
-            }
+            h1 { font-size: 2em; }
+            .sources-grid { grid-template-columns: 1fr; }
+            .result-header { flex-direction: column; }
+            .tips-grid { grid-template-columns: 1fr; }
         }
 
         /* Markdown Preview Modal */
@@ -631,20 +601,15 @@
         }
 
         @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-
-            to {
-                opacity: 1;
-            }
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
         .modal-content {
-            background: #0d1117;
+            background: var(--bg-primary);
             margin: 2% auto;
             padding: 0;
-            border: 1px solid #30363d;
+            border: 1px solid var(--border-color);
             border-radius: 12px;
             width: 90%;
             max-width: 1200px;
@@ -656,7 +621,7 @@
 
         .modal-header {
             padding: 20px 30px;
-            border-bottom: 1px solid #30363d;
+            border-bottom: 1px solid var(--border-color);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -665,19 +630,19 @@
         .modal-title {
             font-size: 20px;
             font-weight: 600;
-            color: #c9d1d9;
+            color: var(--text-primary);
         }
 
         .modal-subtitle {
             font-size: 14px;
-            color: #8b949e;
+            color: var(--text-secondary);
             margin-top: 4px;
         }
 
         .modal-close {
-            background: #161b22;
-            border: 1px solid #30363d;
-            color: #c9d1d9;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
             padding: 8px 16px;
             border-radius: 6px;
             cursor: pointer;
@@ -686,7 +651,7 @@
         }
 
         .modal-close:hover {
-            background: #30363d;
+            background: var(--bg-tertiary);
         }
 
         .modal-body {
@@ -697,7 +662,7 @@
 
         .modal-footer {
             padding: 20px 30px;
-            border-top: 1px solid #30363d;
+            border-top: 1px solid var(--border-color);
             display: flex;
             gap: 10px;
             justify-content: flex-end;
@@ -714,48 +679,48 @@
         }
 
         .modal-btn-primary {
-            background: #238636;
+            background: var(--accent-green);
             color: white;
         }
 
         .modal-btn-primary:hover {
-            background: #2ea043;
+            background: var(--accent-green-hover);
         }
 
         .modal-btn-secondary {
-            background: #161b22;
-            border: 1px solid #30363d;
-            color: #c9d1d9;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
         }
 
         .modal-btn-secondary:hover {
-            background: #30363d;
+            background: var(--bg-tertiary);
         }
 
         /* Markdown Content Styling */
         .markdown-content {
-            color: #c9d1d9;
+            color: var(--text-primary);
             line-height: 1.6;
         }
 
         .markdown-content h1 {
-            color: #58a6ff;
+            color: var(--accent-blue);
             font-size: 2em;
             margin-top: 24px;
             margin-bottom: 16px;
-            border-bottom: 1px solid #30363d;
+            border-bottom: 1px solid var(--border-color);
             padding-bottom: 8px;
         }
 
         .markdown-content h2 {
-            color: #58a6ff;
+            color: var(--accent-blue);
             font-size: 1.5em;
             margin-top: 24px;
             margin-bottom: 16px;
         }
 
         .markdown-content h3 {
-            color: #58a6ff;
+            color: var(--accent-blue);
             font-size: 1.25em;
             margin-top: 16px;
             margin-bottom: 8px;
@@ -766,17 +731,17 @@
         }
 
         .markdown-content code {
-            background: #161b22;
+            background: var(--bg-secondary);
             padding: 2px 6px;
             border-radius: 3px;
             font-family: 'Courier New', monospace;
             font-size: 0.9em;
-            color: #f85149;
+            color: var(--accent-red);
         }
 
         .markdown-content pre {
-            background: #161b22;
-            border: 1px solid #30363d;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
             border-radius: 6px;
             padding: 16px;
             overflow-x: auto;
@@ -786,7 +751,7 @@
         .markdown-content pre code {
             background: none;
             padding: 0;
-            color: #c9d1d9;
+            color: var(--text-primary);
         }
 
         .markdown-content ul,
@@ -800,14 +765,14 @@
         }
 
         .markdown-content blockquote {
-            border-left: 4px solid #30363d;
+            border-left: 4px solid var(--border-color);
             padding-left: 16px;
             margin: 16px 0;
-            color: #8b949e;
+            color: var(--text-secondary);
         }
 
         .markdown-content a {
-            color: #58a6ff;
+            color: var(--accent-blue);
             text-decoration: none;
         }
 
@@ -823,13 +788,13 @@
 
         .markdown-content th,
         .markdown-content td {
-            border: 1px solid #30363d;
+            border: 1px solid var(--border-color);
             padding: 8px 12px;
             text-align: left;
         }
 
         .markdown-content th {
-            background: #161b22;
+            background: var(--bg-secondary);
             font-weight: 600;
         }
     </style>
@@ -854,52 +819,34 @@
         <!-- Fuzzy Search Mode -->
         <div class="fuzzy-options"
             style="margin-top: 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 24px; justify-content: center;">
-            <span style="color: #8b949e; font-size: 16px; font-weight: 500;">Fuzzy search:</span>
-
-            <label
-                style="display: flex; align-items: center; gap: 8px; color: #8b949e; font-size: 16px; cursor: pointer;">
-                <input type="radio" name="fuzzyMode" value="off"
-                    style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent-blue);">
+            <span style="color: var(--text-secondary); font-size: 16px; font-weight: 500;">Fuzzy search:</span>
+            <label style="display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 16px; cursor: pointer;">
+                <input type="radio" name="fuzzyMode" value="off" style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent-blue);">
                 <span>Off</span>
             </label>
-
-            <label
-                style="display: flex; align-items: center; gap: 8px; color: #8b949e; font-size: 16px; cursor: pointer;">
-                <input type="radio" name="fuzzyMode" value="normal" checked
-                    style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent-blue);">
+            <label style="display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 16px; cursor: pointer;">
+                <input type="radio" name="fuzzyMode" value="normal" checked style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent-blue);">
                 <span>Normal</span>
             </label>
-
-            <label
-                style="display: flex; align-items: center; gap: 8px; color: #8b949e; font-size: 16px; cursor: pointer;">
-                <input type="radio" name="fuzzyMode" value="prefer"
-                    style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent-blue);">
+            <label style="display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 16px; cursor: pointer;">
+                <input type="radio" name="fuzzyMode" value="prefer" style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent-blue);">
                 <span>Prefer</span>
             </label>
         </div>
 
         <div class="source-options"
             style="margin-top: 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 24px; justify-content: center;">
-            <span style="color: #8b949e; font-size: 16px; font-weight: 500;">Show:</span>
-
-            <label
-                style="display: flex; align-items: center; gap: 8px; color: #8b949e; font-size: 16px; cursor: pointer;">
-                <input type="radio" name="sourceMode" value="all" checked
-                    style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent-blue);">
+            <span style="color: var(--text-secondary); font-size: 16px; font-weight: 500;">Show:</span>
+            <label style="display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 16px; cursor: pointer;">
+                <input type="radio" name="sourceMode" value="all" checked style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent-blue);">
                 <span>All</span>
             </label>
-
-            <label
-                style="display: flex; align-items: center; gap: 8px; color: #8b949e; font-size: 16px; cursor: pointer;">
-                <input type="radio" name="sourceMode" value="local"
-                    style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent-blue);">
+            <label style="display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 16px; cursor: pointer;">
+                <input type="radio" name="sourceMode" value="local" style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent-blue);">
                 <span>📁 Local</span>
             </label>
-
-            <label
-                style="display: flex; align-items: center; gap: 8px; color: #8b949e; font-size: 16px; cursor: pointer;">
-                <input type="radio" name="sourceMode" value="online"
-                    style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent-blue);">
+            <label style="display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 16px; cursor: pointer;">
+                <input type="radio" name="sourceMode" value="online" style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent-blue);">
                 <span>🌐 Online</span>
             </label>
         </div>
@@ -907,7 +854,7 @@
         <!-- Loading -->
         <div class="loading" id="loading">
             <div class="spinner"></div>
-            <p style="color: #8b949e;">Searching...</p>
+            <p style="color: var(--text-secondary);">Searching...</p>
         </div>
 
         <!-- Results Info -->
@@ -921,7 +868,7 @@
         <!-- Results -->
         <div class="results" id="results"></div>
 
-        <!-- Tips: Depeond on the type of content (shown when no search) -->
+        <!-- Tips -->
         <div class="tips" id="tips">
             <div class="tips-title">💡 Example searches</div>
             <div class="tips-grid">
@@ -966,7 +913,7 @@
             </div>
         </div>
 
-        <!-- Sources Section (moved to bottom) -->
+        <!-- Sources Section -->
         <div class="sources-section" id="sourcesSection">
             <div class="sources-header" onclick="toggleSources()">
                 <div class="sources-title">
@@ -975,9 +922,7 @@
                 </div>
                 <div class="collapse-arrow" id="collapseArrow">▼</div>
             </div>
-            <div class="sources-grid" id="sourcesGrid">
-                <!-- Sources loaded dynamically -->
-            </div>
+            <div class="sources-grid" id="sourcesGrid"></div>
         </div>
     </div>
 
@@ -993,7 +938,7 @@
             </div>
             <div class="modal-body">
                 <div class="markdown-content" id="modalContent">
-                    <p style="text-align: center; color: #8b949e;">Loading...</p>
+                    <p style="text-align: center; color: var(--text-secondary);">Loading...</p>
                 </div>
             </div>
             <div class="modal-footer">
@@ -1021,21 +966,21 @@
         const resultsCount = document.getElementById('resultsCount');
         const searchStats = document.getElementById('searchStats');
         const collapseArrow = document.getElementById('collapseArrow');
-        const savedTheme = localStorage.getItem('theme') || 'dark';
 
         let searchTimeout;
         let sourcesCollapsed = false;
         let currentFilePath = null;
-        let fuzzyMode = 'normal';   // 'off', 'normal', 'prefer'
-        let sourceMode = 'all';     // 'all', 'local', 'online'
+        let fuzzyMode = 'normal';
+        let sourceMode = 'all';
         let allSearchResults = [];
         let selectedResultIndex = -1;
 
-        // Load saved source enable/disable preference
         let disabledSources = new Set(
             JSON.parse(localStorage.getItem('disabledSources') || '[]')
         );
 
+        // ── Theme ──────────────────────────────────────────────
+        const savedTheme = localStorage.getItem('theme') || 'dark';
         applyTheme(savedTheme);
 
         function applyTheme(theme) {
@@ -1056,8 +1001,8 @@
             localStorage.setItem('theme', next);
             applyTheme(next);
         }
+        // ── End Theme ──────────────────────────────────────────
 
-        // Load saved fuzzy preference
         const savedFuzzyMode = localStorage.getItem('fuzzyMode');
         if (savedFuzzyMode) {
             fuzzyMode = savedFuzzyMode;
@@ -1065,7 +1010,6 @@
             if (radio) radio.checked = true;
         }
 
-        // Load saved preference
         const savedSourceMode = localStorage.getItem('sourceMode');
         if (savedSourceMode) {
             sourceMode = savedSourceMode;
@@ -1073,12 +1017,9 @@
             if (radio) radio.checked = true;
         }
 
-
-        // Update hint text based on fuzzy mode
         function updateFuzzyHint() {
             const hint = document.getElementById('searchHint');
             if (!hint) return;
-
             if (fuzzyMode === 'off') {
                 hint.textContent = '🎯 Exact search only - results must match precisely';
             } else if (fuzzyMode === 'normal') {
@@ -1088,31 +1029,23 @@
             }
         }
 
-        // Listen for fuzzy mode changes
         document.querySelectorAll('input[name="fuzzyMode"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
                 fuzzyMode = e.target.value;
                 localStorage.setItem('fuzzyMode', fuzzyMode);
                 updateFuzzyHint();
-
-                // Re-search if there's an active query
                 if (searchInput.value.trim()) {
                     performSearch(searchInput.value.trim());
-                    console.log(search)
                 }
             });
         });
 
-        // Set initial hint
         updateFuzzyHint();
 
-        // Listen for changes
         document.querySelectorAll('input[name="sourceMode"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
                 sourceMode = e.target.value;
                 localStorage.setItem('sourceMode', sourceMode);
-
-                // Re-filter without new server request
                 if (allSearchResults.length > 0) {
                     displayResults(filterResults(allSearchResults));
                 }
@@ -1125,12 +1058,9 @@
             } else {
                 disabledSources.add(sourceId);
             }
-
             localStorage.setItem('disabledSources', JSON.stringify([...disabledSources]));
-
             const card = document.getElementById(`source-card-${sourceId}`);
             const toggle = card.querySelector('.source-toggle');
-
             if (disabledSources.has(sourceId)) {
                 card.classList.add('disabled');
                 toggle.classList.remove('active');
@@ -1140,13 +1070,11 @@
                 toggle.classList.add('active');
                 toggle.title = 'Disable source';
             }
-
             if (allSearchResults.length > 0) {
                 displayResults(filterResults(allSearchResults));
             }
         }
 
-        // Toggle sources collapse
         function toggleSources() {
             sourcesCollapsed = !sourcesCollapsed;
             if (sourcesCollapsed) {
@@ -1158,30 +1086,26 @@
             }
         }
 
-        // Preview modal functions
         async function openPreview(filePath, title, pageName) {
             currentFilePath = filePath;
             const modal = document.getElementById('previewModal');
             const modalTitle = document.getElementById('modalTitle');
             const modalSubtitle = document.getElementById('modalSubtitle');
             const modalContent = document.getElementById('modalContent');
-
             modal.style.display = 'block';
             modalTitle.textContent = title;
             modalSubtitle.textContent = `📁 ${pageName}`;
-            modalContent.innerHTML = '<p style="text-align: center; color: #8b949e;">Loading...</p>';
-
+            modalContent.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">Loading...</p>';
             try {
                 const response = await fetch(`/api/preview?file=${encodeURIComponent(filePath)}`);
                 const data = await response.json();
-
                 if (data.error) {
-                    modalContent.innerHTML = `<p style="color: #f85149;">Error: ${data.error}</p>`;
+                    modalContent.innerHTML = `<p style="color: var(--accent-red);">Error: ${data.error}</p>`;
                 } else {
                     modalContent.innerHTML = data.html;
                 }
             } catch (error) {
-                modalContent.innerHTML = `<p style="color: #f85149;">Could not load file preview</p>`;
+                modalContent.innerHTML = `<p style="color: var(--accent-red);">Could not load file preview</p>`;
             }
         }
 
@@ -1196,36 +1120,31 @@
             const modalTitle = document.getElementById('modalTitle');
             const modalSubtitle = document.getElementById('modalSubtitle');
             const modalContent = document.getElementById('modalContent');
-
             modal.style.display = 'block';
             modalTitle.textContent = title + ' (Offline)';
             modalSubtitle.textContent = `📱 Cached from ${sourceId}`;
-            modalContent.innerHTML = '<p style="text-align: center; color: #8b949e;">Loading cached page...</p>';
-
+            modalContent.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">Loading cached page...</p>';
             try {
                 const response = await fetch(`/api/cached-page?source_id=${encodeURIComponent(sourceId)}&url=${encodeURIComponent(url)}`);
                 const data = await response.json();
-
                 if (data.error) {
                     modalContent.innerHTML = `
                         <div style="text-align: center; padding: 40px;">
-                            <p style="color: #f85149; font-size: 18px; margin-bottom: 16px;">❌ ${data.error}</p>
-                            <p style="color: #8b949e;">${data.message || ''}</p>
+                            <p style="color: var(--accent-red); font-size: 18px; margin-bottom: 16px;">❌ ${data.error}</p>
+                            <p style="color: var(--text-secondary);">${data.message || ''}</p>
                             <br>
                             <a href="${url}" target="_blank" class="open-btn">🌐 Open online instead</a>
-                        </div>
-                    `;
+                        </div>`;
                 } else {
                     modalContent.innerHTML = data.html;
                 }
             } catch (error) {
                 modalContent.innerHTML = `
                     <div style="text-align: center; padding: 40px;">
-                        <p style="color: #f85149;">Could not load cached page</p>
+                        <p style="color: var(--accent-red);">Could not load cached page</p>
                         <br>
                         <a href="${url}" target="_blank" class="open-btn">🌐 Open online instead</a>
-                    </div>
-                `;
+                    </div>`;
             }
         }
 
@@ -1236,21 +1155,15 @@
             }
         }
 
-        // Close modal on background click
         window.onclick = function (event) {
             const modal = document.getElementById('previewModal');
-            if (event.target === modal) {
-                closePreview();
-            }
+            if (event.target === modal) closePreview();
         };
 
         document.addEventListener('keydown', function (event) {
             if (event.key === 'Escape') {
                 const modal = document.getElementById('previewModal');
-                if (modal.style.display === 'block') {
-                    closePreview();
-                    return;
-                }
+                if (modal.style.display === 'block') { closePreview(); return; }
                 searchInput.value = '';
                 resultsDiv.innerHTML = '';
                 resultsInfo.style.display = 'none';
@@ -1262,23 +1175,18 @@
                 searchInput.focus();
                 return;
             }
-
             if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
                 const resultItems = document.querySelectorAll('.result-item');
                 if (resultItems.length === 0) return;
-
                 event.preventDefault();
-
                 if (selectedResultIndex >= 0 && resultItems[selectedResultIndex]) {
                     resultItems[selectedResultIndex].classList.remove('keyboard-selected');
                 }
-
                 if (event.key === 'ArrowDown') {
                     selectedResultIndex = Math.min(selectedResultIndex + 1, resultItems.length - 1);
                 } else {
                     selectedResultIndex = Math.max(selectedResultIndex - 1, 0);
                 }
-
                 resultItems[selectedResultIndex].classList.add('keyboard-selected');
                 resultItems[selectedResultIndex].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
             }
@@ -1288,47 +1196,37 @@
             try {
                 const response = await fetch('/api/sources');
                 const data = await response.json();
-
-                // Load cache status
                 const cacheResponse = await fetch('/api/cache-status');
                 const cacheData = await cacheResponse.json();
                 const cacheMap = {};
-
-                // Create map of cached sources
                 if (cacheData.sources) {
-                    cacheData.sources.forEach(s => {
-                        cacheMap[s.source_id] = s;
-                    });
+                    cacheData.sources.forEach(s => { cacheMap[s.source_id] = s; });
                 }
-
                 if (data.sources && data.sources.length > 0) {
                     sourcesCount.textContent = `${data.total} sources`;
-
                     sourcesGrid.innerHTML = data.sources.map(source => {
-                        const isDisabled = disabledSources.has(source.id);  // ← NY
+                        const isDisabled = disabledSources.has(source.id);
                         const cacheInfo = cacheMap[source.id];
                         const cacheBadge = cacheInfo
                             ? `<span class="cache-badge" style="background: #1f6feb; color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px;">Cached</span>`
                             : '';
-
                         return `
-                    <div class="source-card ${isDisabled ? 'disabled' : ''}" id="source-card-${source.id}">  <!-- ← NY -->
-                        <div class="source-toggle ${isDisabled ? '' : 'active'}"
-                             onclick="toggleSource('${source.id}')"
-                             title="${isDisabled ? 'Enable source' : 'Disable source'}">
-                        </div>  <!-- ← NY -->
-                        <div class="source-name" style="padding-right: 44px;">  <!-- ← padding-right NY -->
-                            ${escapeHtml(source.name)}
-                            <span class="source-type">${source.type}</span>
-                            ${cacheBadge}
-                        </div>
-                        ${source.description ? `<div class="source-desc">${escapeHtml(source.description)}</div>` : ''}
-                        <div class="source-pages">
-                            📄 ${source.page_count} pages indexed
-                            ${cacheInfo ? `<br>💾 ${cacheInfo.size_mb} MB cached` : ''}
-                        </div>
-                    </div>
-                `;
+                            <div class="source-card ${isDisabled ? 'disabled' : ''}" id="source-card-${source.id}">
+                                <div class="source-toggle ${isDisabled ? '' : 'active'}"
+                                     onclick="event.stopPropagation(); toggleSource('${source.id}')"
+                                     title="${isDisabled ? 'Enable source' : 'Disable source'}">
+                                </div>
+                                <div class="source-name" style="padding-right: 44px;">
+                                    ${escapeHtml(source.name)}
+                                    <span class="source-type">${source.type}</span>
+                                    ${cacheBadge}
+                                </div>
+                                ${source.description ? `<div class="source-desc">${escapeHtml(source.description)}</div>` : ''}
+                                <div class="source-pages">
+                                    📄 ${source.page_count} pages indexed
+                                    ${cacheInfo ? `<br>💾 ${cacheInfo.size_mb} MB cached` : ''}
+                                </div>
+                            </div>`;
                     }).join('');
                 } else {
                     sourcesSection.style.display = 'none';
@@ -1339,15 +1237,12 @@
             }
         }
 
-        // Search functionality
         searchInput.addEventListener('input', (e) => {
             clearTimeout(searchTimeout);
             const query = e.target.value.trim();
-
             selectedResultIndex = -1;
             document.querySelectorAll('.result-item.keyboard-selected')
                 .forEach(el => el.classList.remove('keyboard-selected'));
-
             if (query.length === 0) {
                 resultsDiv.innerHTML = '';
                 resultsInfo.style.display = 'none';
@@ -1357,21 +1252,15 @@
                 document.getElementById('keyboardHint').classList.remove('visible');
                 return;
             }
-
             tipsDiv.style.display = 'none';
-
-            searchTimeout = setTimeout(() => {
-                performSearch(query);
-            }, 400);
+            searchTimeout = setTimeout(() => { performSearch(query); }, 400);
         });
 
         searchInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 clearTimeout(searchTimeout);
                 const query = e.target.value.trim();
-                if (query.length > 0) {
-                    performSearch(query);
-                }
+                if (query.length > 0) performSearch(query);
             }
         });
 
@@ -1379,42 +1268,33 @@
             loadingDiv.style.display = 'block';
             resultsDiv.innerHTML = '';
             resultsInfo.style.display = 'none';
-
             try {
                 const response = await fetch('/api/search', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ query, fuzzyMode: fuzzyMode })
                 });
-
                 const data = await response.json();
                 loadingDiv.style.display = 'none';
-
                 if (data.error) {
                     resultsDiv.innerHTML = `
                         <div class="error-message">
                             <h3>${data.error}</h3>
                             <p style="margin-top: 10px;">Kör: <code>npm run index</code></p>
-                        </div>
-                    `;
+                        </div>`;
                     return;
                 }
-
                 if (data.count === 0) {
                     resultsDiv.innerHTML = `
                         <div class="no-results">
                             <div class="no-results-icon">🔍</div>
                             <div class="no-results-text">0 results found</div>
                             <div class="no-results-hint">Try another search term or check spelling</div>
-                        </div>
-                    `;
+                        </div>`;
                 } else {
                     resultsInfo.style.display = 'block';
                     resultsCount.innerHTML = `<strong>${data.count}</strong> results for "<strong>${escapeHtml(query)}</strong>"`;
                     searchStats.textContent = `Searched through ${data.total_searched} sidor in ${data.search_time_ms}ms`;
-
                     allSearchResults = data.results;
                     selectedResultIndex = -1;
                     displayResults(filterResults(allSearchResults));
@@ -1426,55 +1306,38 @@
                     <div class="error-message">
                         <h3>❌ Connection error</h3>
                         <p style="margin-top: 10px;">Check that server is running: <code>npm start</code></p>
-                    </div>
-                `;
+                    </div>`;
             }
         }
 
         function filterResults(results) {
             let filtered = results.filter(r => !disabledSources.has(r.source_id));
-
-            if (sourceMode === 'local') {
-                filtered = filtered.filter(r => r.is_local === true);
-            } else if (sourceMode === 'online') {
-                filtered = filtered.filter(r => !r.is_local);
-            }
-
+            if (sourceMode === 'local') filtered = filtered.filter(r => r.is_local === true);
+            else if (sourceMode === 'online') filtered = filtered.filter(r => !r.is_local);
             return filtered;
         }
 
         function displayResults(results) {
             resultsDiv.innerHTML = results.map(result => {
                 const isLocal = result.url && result.url.startsWith('file://');
-                const isCached = result.is_cached === true || result.cache_hash; // Has cached version
-                const localBadge = isLocal ? '<span class="badge" style="background: var(--accent-purple);">📁 Lokal</span>' : '';
-
+                const isCached = result.is_cached === true || result.cache_hash;
                 let badge = '';
-                if (isLocal) {
-                    badge = '<span class="badge" style="background: var(--accent-purple);">📁 Local</span>';
-                } else if (isCached) {
-                    badge = '<span class="badge" style="background: var(--accent-green);">📱 Cached</span>';
-                }
+                if (isLocal) badge = '<span class="badge" style="background: var(--accent-purple);">📁 Local</span>';
+                else if (isCached) badge = '<span class="badge" style="background: var(--accent-green);">📱 Cached</span>';
 
-                // Determine button based on file type
                 let openButton;
                 if (isLocal) {
                     openButton = `<button class="open-btn" onclick="openPreview('${escapeHtml(result.file_path || result.url.replace('file://', ''))}', '${escapeHtml(result.title)}', '${escapeHtml(result.page_name)}')">👁️ Preview</button>`;
                 } else if (isCached) {
                     openButton = `
-                        <button class="open-btn" onclick="openCachedPage('${escapeHtml(result.source_id)}', '${escapeHtml(result.url)}', '${escapeHtml(result.title)}')">
-                            📱 Offline Preview
-                        </button>
-                        <a href="${result.url}" class="open-btn" style="background: #30363d; margin-left: 8px;" target="_blank">🌐 Online</a>
-                    `;
+                        <button class="open-btn" onclick="openCachedPage('${escapeHtml(result.source_id)}', '${escapeHtml(result.url)}', '${escapeHtml(result.title)}')">📱 Offline Preview</button>
+                        <a href="${result.url}" class="open-btn" style="background: var(--bg-tertiary); margin-left: 8px;" target="_blank">🌐 Online</a>`;
                 } else {
                     openButton = `<a href="${result.url}" class="open-btn" target="_blank">Open page →</a>`;
                 }
 
-                // Highlight snippet if available
                 let snippetHTML = '';
                 if (result.snippet) {
-                    // Handle both old string format and new object format
                     if (typeof result.snippet === 'string') {
                         snippetHTML = `<div class="result-snippet">${escapeHtml(result.snippet)}</div>`;
                     } else if (result.snippet.text) {
@@ -1495,20 +1358,15 @@
                             <span class="badge badge-match">${formatMatchType(result.match_type)}</span>
                         </div>
                     </div>
-                    <div class="result-source">
-                        📚 ${escapeHtml(result.source_name)}
-                    </div>
+                    <div class="result-source">📚 ${escapeHtml(result.source_name)}</div>
                     ${snippetHTML}
-                    ${isLocal ? `
-                        <div class="result-link" style="color: var(--text-secondary); cursor: default;">
-                            📁 ${escapeHtml(result.file_path || result.url.replace('file://', ''))}
-                        </div>
-                    ` : `
-                        <a href="${result.url}" class="result-link" target="_blank">${result.url}</a>
-                    `}
+                    ${isLocal
+                        ? `<div class="result-link" style="color: var(--text-secondary); cursor: default;">📁 ${escapeHtml(result.file_path || result.url.replace('file://', ''))}</div>`
+                        : `<a href="${result.url}" class="result-link" target="_blank">${result.url}</a>`
+                    }
                     ${openButton}
-                </div>
-            `}).join('');
+                </div>`;
+            }).join('');
         }
 
         function formatMatchType(type) {
@@ -1524,30 +1382,15 @@
         }
 
         function escapeHtml(text) {
-            const map = {
-                '&': '&amp;',
-                '<': '&lt;',
-                '>': '&gt;',
-                '"': '&quot;',
-                "'": '&#039;'
-            };
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
             return text.replace(/[&<>"']/g, m => map[m]);
         }
 
-        // Focus search on load
-        window.addEventListener('load', () => {
-            searchInput.focus();
-        });
-
+        window.addEventListener('load', () => { searchInput.focus(); });
         loadSources();
-
-        // Show/hide tips based on search input
         searchInput.addEventListener('focus', () => {
-            if (!searchInput.value) {
-                tipsDiv.style.display = 'block';
-            }
+            if (!searchInput.value) tipsDiv.style.display = 'block';
         });
     </script>
 </body>
-
 </html>
