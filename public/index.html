@@ -337,8 +337,13 @@
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
         /* Results Info */
@@ -581,10 +586,21 @@
 
         /* Responsive */
         @media (max-width: 768px) {
-            h1 { font-size: 2em; }
-            .sources-grid { grid-template-columns: 1fr; }
-            .result-header { flex-direction: column; }
-            .tips-grid { grid-template-columns: 1fr; }
+            h1 {
+                font-size: 2em;
+            }
+
+            .sources-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .result-header {
+                flex-direction: column;
+            }
+
+            .tips-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
         /* Markdown Preview Modal */
@@ -601,8 +617,13 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
         }
 
         .modal-content {
@@ -820,16 +841,22 @@
         <div class="fuzzy-options"
             style="margin-top: 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 24px; justify-content: center;">
             <span style="color: var(--text-secondary); font-size: 16px; font-weight: 500;">Fuzzy search:</span>
-            <label style="display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 16px; cursor: pointer;">
-                <input type="radio" name="fuzzyMode" value="off" style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent-blue);">
+            <label
+                style="display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 16px; cursor: pointer;">
+                <input type="radio" name="fuzzyMode" value="off"
+                    style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent-blue);">
                 <span>Off</span>
             </label>
-            <label style="display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 16px; cursor: pointer;">
-                <input type="radio" name="fuzzyMode" value="normal" checked style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent-blue);">
+            <label
+                style="display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 16px; cursor: pointer;">
+                <input type="radio" name="fuzzyMode" value="normal" checked
+                    style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent-blue);">
                 <span>Normal</span>
             </label>
-            <label style="display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 16px; cursor: pointer;">
-                <input type="radio" name="fuzzyMode" value="prefer" style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent-blue);">
+            <label
+                style="display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 16px; cursor: pointer;">
+                <input type="radio" name="fuzzyMode" value="prefer"
+                    style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent-blue);">
                 <span>Prefer</span>
             </label>
         </div>
@@ -837,16 +864,22 @@
         <div class="source-options"
             style="margin-top: 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 24px; justify-content: center;">
             <span style="color: var(--text-secondary); font-size: 16px; font-weight: 500;">Show:</span>
-            <label style="display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 16px; cursor: pointer;">
-                <input type="radio" name="sourceMode" value="all" checked style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent-blue);">
+            <label
+                style="display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 16px; cursor: pointer;">
+                <input type="radio" name="sourceMode" value="all" checked
+                    style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent-blue);">
                 <span>All</span>
             </label>
-            <label style="display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 16px; cursor: pointer;">
-                <input type="radio" name="sourceMode" value="local" style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent-blue);">
+            <label
+                style="display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 16px; cursor: pointer;">
+                <input type="radio" name="sourceMode" value="local"
+                    style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent-blue);">
                 <span>📁 Local</span>
             </label>
-            <label style="display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 16px; cursor: pointer;">
-                <input type="radio" name="sourceMode" value="online" style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent-blue);">
+            <label
+                style="display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 16px; cursor: pointer;">
+                <input type="radio" name="sourceMode" value="online"
+                    style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent-blue);">
                 <span>🌐 Online</span>
             </label>
         </div>
@@ -1393,4 +1426,5 @@
         });
     </script>
 </body>
+
 </html>
