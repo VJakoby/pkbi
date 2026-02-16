@@ -1,7 +1,7 @@
 # 🔍 Pentest KB Indexer (PKBI)
 
 A fast local tool for searching indexed pages of pentesting documentation.
-
+Use for personal usage only.
 Feel free to use for your own needs, for other type of information other than pentest.
 
 ## ✨ Features
