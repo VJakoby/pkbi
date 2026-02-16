@@ -3,6 +3,7 @@ const fs = require('fs').promises;
 const path = require('path');
 const cheerio = require('cheerio');
 const crypto = require('crypto');
+const RATE = 1000; // Delay in ms between the requests (1000 = 1 req/sec), (500 = 2 req/sec)
 
 class ContentIndexer {
     constructor() {
@@ -480,7 +481,7 @@ class ContentIndexer {
             indexed += chunk.length;
             console.log(`  Indexerade ${indexed}/${linkArray.length} pages (${successful} successful)...`);
             
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            await new Promise(resolve => setTimeout(resolve, RATE));
         }
 
         console.log(`  ✅ Indexed total ${pages.length} pages from ${source.name}`);
@@ -527,7 +528,7 @@ class ContentIndexer {
             pages.push(...results.filter(p => p !== null));
             
             console.log(`  Indexerade ${i + chunk.length}/${source.pages.length} pages...`);
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            await new Promise(resolve => setTimeout(resolve, RATE));
         }
 
         console.log(`  ✅ Indexerade ${pages.length} pages from ${source.name}`);
@@ -613,7 +614,7 @@ class ContentIndexer {
             indexed += chunk.length;
             console.log(`  Indexerade ${indexed}/${source.urls.length} filer (${successful} successful)...`);
             
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            await new Promise(resolve => setTimeout(resolve, RATE));
         }
 
         console.log(`  ✅ Indexed total ${pages.length} markdown-filer from ${source.name}`);
@@ -692,6 +693,9 @@ class ContentIndexer {
     }
 
     async saveIndex() {
+        // Backup before overwriting
+        await fs.copyFile(this.indexPath, this.indexPath + '.backup').catch(() => {});
+
         // Prepare index for saving
         const indexData = JSON.stringify(this.index, null, 2);
         const sizeKB = (indexData.length / 1024).toFixed(2);
@@ -900,7 +904,7 @@ class ContentIndexer {
                 }
                 
                 // Small delay to avoid hammering server
-                await new Promise(resolve => setTimeout(resolve, 1000));
+                await new Promise(resolve => setTimeout(resolve, RATE));
                 
             } catch (error) {
                 console.error(`    ❌ Cache failed for: ${page.title}`);
