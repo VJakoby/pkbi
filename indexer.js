@@ -3,7 +3,12 @@ const fs = require('fs').promises;
 const path = require('path');
 const cheerio = require('cheerio');
 const crypto = require('crypto');
-const RATE = 1000; // Delay in ms between the requests (1000 = 1 req/sec), (500 = 2 req/sec)
+const RATE = 500; 
+/* Delay in ms between the requests. Keep it at either of these levels to avoid being blocked.
+* 1000 --> 1 req/sec
+* 500 --> 2 req/sec
+* 333 -> 3 req/sec
+*/
 
 class ContentIndexer {
     constructor() {
@@ -46,11 +51,9 @@ class ContentIndexer {
     }
 
     resolvePath(configPath) {
-        // If relative path, resolve from project root
         if (configPath.startsWith('./') || configPath.startsWith('../')) {
             return path.resolve(__dirname, configPath);
         }
-        // If absolute path, use as-is
         return configPath;
     }
 
@@ -65,7 +68,6 @@ class ContentIndexer {
                     const fullPath = path.join(dir, entry.name);
                     
                     if (entry.isDirectory()) {
-                        // Skip directories that end with .md (edge case)
                         if (entry.name.endsWith('.md')) {
                             console.log(`  ⏭️  Skipping directory: ${entry.name}`);
                             continue;
@@ -88,7 +90,6 @@ class ContentIndexer {
     }
 
     extractMarkdownTitle(content, filePath) {
-        // Try to extract title from first # heading
         const lines = content.split('\n');
         for (const line of lines) {
             const match = line.match(/^#\s+(.+)/);
@@ -96,8 +97,6 @@ class ContentIndexer {
                 return match[1].trim();
             }
         }
-        
-        // Fallback to filename without extension
         return path.basename(filePath, path.extname(filePath));
     }
 
@@ -126,7 +125,6 @@ class ContentIndexer {
             return pages;
         }
         
-        // Smart incremental: Check which files changed
         let newFiles = 0;
         let updatedFiles = 0;
         let unchangedFiles = 0;
@@ -136,20 +134,17 @@ class ContentIndexer {
                 const stats = await fs.stat(filePath);
                 const lastModified = stats.mtime.toISOString();
                 
-                // Check if file exists in index and hasn't changed
                 const existingPage = this.index.pages.find(p => p.file_path === filePath);
                 
                 if (existingPage && existingPage.file_modified === lastModified) {
-                    // File unchanged, keep existing entry
                     pages.push(existingPage);
                     unchangedFiles++;
                     continue;
                 }
                 
-                // File is new or modified, re-index it
                 const page = await this.indexSingleLocalFile(filePath, source, resolvedPath);
                 if (page) {
-                    page.file_modified = lastModified; // Track modification time
+                    page.file_modified = lastModified;
                     pages.push(page);
                     
                     if (existingPage) {
@@ -171,17 +166,14 @@ class ContentIndexer {
         return pages;
     }
 
-    // Helper method to index a single local file
     async indexSingleLocalFile(filePath, source, resolvedPath) {
         try {
             const content = await fs.readFile(filePath, 'utf-8');
             const title = this.extractMarkdownTitle(content, filePath);
             
-            // Create relative path from source root for page name
             const relativePath = path.relative(resolvedPath, filePath);
             const pageName = relativePath.replace(/\\/g, '/').replace(/\.(md|txt)$/i, '');
             
-            // Use file:// protocol for local files
             const fileUrl = `file://${filePath}`;
             
             return {
@@ -201,11 +193,9 @@ class ContentIndexer {
         }
     }
 
-    // INCREMENTAL UPDATE: Update single local file without full re-index
     async updateLocalFile(filePath) {
         console.log(`\n🔄 Uppdaterar fil: ${filePath}`);
         
-        // Find which source this file belongs to
         const sources = await this.loadSources();
         let sourceMatch = null;
         let resolvedPath = null;
@@ -224,7 +214,6 @@ class ContentIndexer {
             return false;
         }
         
-        // Index the single file
         const newPage = await this.indexSingleLocalFile(filePath, sourceMatch, resolvedPath);
         
         if (!newPage) {
@@ -232,7 +221,6 @@ class ContentIndexer {
             return false;
         }
         
-        // Find and replace existing entry, or add new
         const existingIndex = this.index.pages.findIndex(p => p.file_path === filePath);
         
         if (existingIndex >= 0) {
@@ -243,11 +231,9 @@ class ContentIndexer {
             console.log('  ✅ Ny fil tillagd i index');
         }
         
-        // Update index metadata
         this.index.last_updated = new Date().toISOString();
         this.index.total_pages = this.index.pages.length;
         
-        // Update source page count
         const sourceInIndex = this.index.sources.find(s => s.id === sourceMatch.id);
         if (sourceInIndex) {
             sourceInIndex.page_count = this.index.pages.filter(p => p.source_id === sourceMatch.id).length;
@@ -259,7 +245,6 @@ class ContentIndexer {
         return true;
     }
 
-    // INCREMENTAL DELETE: Remove deleted local file from index
     async removeLocalFile(filePath) {
         console.log(`\n🗑️  Tar bort fil from index: ${filePath}`);
         
@@ -269,11 +254,9 @@ class ContentIndexer {
             const removedPage = this.index.pages[existingIndex];
             this.index.pages.splice(existingIndex, 1);
             
-            // Update metadata
             this.index.last_updated = new Date().toISOString();
             this.index.total_pages = this.index.pages.length;
             
-            // Update source page count
             const sourceInIndex = this.index.sources.find(s => s.id === removedPage.source_id);
             if (sourceInIndex) {
                 sourceInIndex.page_count = this.index.pages.filter(p => p.source_id === removedPage.source_id).length;
@@ -328,7 +311,6 @@ class ContentIndexer {
     extractTitle(html, url) {
         const $ = cheerio.load(html);
         
-        // Försök flera metoder för att få bästa titel
         let title = $('h1').first().text().trim();
         
         if (!title) {
@@ -336,22 +318,19 @@ class ContentIndexer {
         }
         
         if (!title) {
-            // Fallback: extrahera from URL
             const urlParts = url.split('/');
             title = urlParts[urlParts.length - 1].replace(/-/g, ' ');
         }
         
-        // Rensa titeln
         title = title
-            .replace(/\s*\|\s*.*/g, '') // Ta bort "| Site Name"
-            .replace(/\s*-\s*.*/g, '')  // Ta bort "- Site Name"
+            .replace(/\s*\|\s*.*/g, '')
+            .replace(/\s*-\s*.*/g, '')
             .trim();
         
         return title || 'Untitled';
     }
 
     extractPageName(url) {
-        // Extrahera sidnamnet from URL
         const urlObj = new URL(url);
         const pathParts = urlObj.pathname.split('/').filter(p => p);
         const pageName = pathParts[pathParts.length - 1] || 'index';
@@ -377,10 +356,9 @@ class ContentIndexer {
         let snippet = content.substring(start, end);
         let highlightStart = snippet.toLowerCase().indexOf(lowerTerm);
         
-        // Add ellipsis
         if (start > 0) {
             snippet = '...' + snippet;
-            highlightStart += 3; // Adjust for ellipsis
+            highlightStart += 3;
         }
         if (end < content.length) {
             snippet = snippet + '...';
@@ -393,95 +371,134 @@ class ContentIndexer {
         };
     }
 
+    // ============ NEW: JITTER + SITEMAP METHODS ============
+
+    // Adds a random delay between 80% and 120% of RATE
+    async jitter() {
+        const delay = RATE * (0.8 + Math.random() * 0.4);
+        await new Promise(resolve => setTimeout(resolve, delay));
+    }
+
+    // Try to fetch sitemap.xml from a base URL
+    async fetchSitemap(baseUrl) {
+        const sitemapUrl = baseUrl.replace(/\/$/, '') + '/sitemap.xml';
+        console.log(`  🗺️  Checking for sitemap: ${sitemapUrl}`);
+
+        try {
+            const xml = await this.fetchPage(sitemapUrl);
+            if (!xml || !xml.includes('<loc>')) return null;
+
+            const urls = [];
+            const matches = xml.matchAll(/<loc>(.*?)<\/loc>/g);
+            for (const match of matches) {
+                const url = match[1].trim();
+                if (url.startsWith(baseUrl)) {
+                    urls.push(url);
+                }
+            }
+
+            if (urls.length > 0) {
+                console.log(`  ✅ Found sitemap with ${urls.length} URLs`);
+                return urls;
+            }
+        } catch (e) {
+            // No sitemap
+        }
+
+        console.log(`  ℹ️  No sitemap found - falling back to link crawling`);
+        return null;
+    }
+
+    // ============ END NEW METHODS ============
+
     async indexGitBookSource(source) {
         console.log(`\n📚 Indexing ${source.name}...`);
         const pages = [];
-        
-        console.log(`  Fetching main page: ${source.index_url}`);
-        const html = await this.fetchPage(source.index_url);
-        if (!html) {
-            console.log(`  ❌ Could not fetch main page`);
-            return pages;
-        }
 
-        const $ = cheerio.load(html);
-        const links = new Set();
+        // Try sitemap first
+        const sitemapUrls = await this.fetchSitemap(source.index_url);
 
-        $('a[href]').each((i, elem) => {
-            let href = $(elem).attr('href');
-            if (href && !href.startsWith('http') && !href.startsWith('#') && !href.startsWith('mailto:')) {
-                try {
-                    const fullUrl = new URL(href, source.index_url).href;
-                    // Filtrera bort externa länkar
-                    if (fullUrl.startsWith(source.index_url)) {
-                        links.add(fullUrl);
-                    }
-                } catch (e) {
-                    // Invalid URL, skip
-                }
+        let linkArray;
+        if (sitemapUrls) {
+            linkArray = sitemapUrls;
+        } else {
+            // Fallback: crawl links from main page
+            console.log(`  Fetching main page: ${source.index_url}`);
+            const html = await this.fetchPage(source.index_url);
+            if (!html) {
+                console.log(`  ❌ Could not fetch main page`);
+                return pages;
             }
-        });
 
-        console.log(`  Found ${links.size} internal links`);
-        
-        if (links.size === 0) {
-            console.log(`  ⚠️  No links found - trying to index main page`);
-            const content = this.extractTextContent(html);
-            const title = this.extractTitle(html, source.index_url);
-            const pageName = this.extractPageName(source.index_url);
-            
-            pages.push({
-                source_id: source.id,
-                source_name: source.name,
-                url: source.index_url,
-                title: title,
-                page_name: pageName,
-                content: content.substring(0, 10000),
-                indexed_at: new Date().toISOString(),
-                is_local: false
+            const $ = cheerio.load(html);
+            const links = new Set();
+
+            $('a[href]').each((i, elem) => {
+                let href = $(elem).attr('href');
+                if (href && !href.startsWith('http') && !href.startsWith('#') && !href.startsWith('mailto:')) {
+                    try {
+                        const fullUrl = new URL(href, source.index_url).href;
+                        if (fullUrl.startsWith(source.index_url)) {
+                            links.add(fullUrl);
+                        }
+                    } catch (e) {
+                        // Invalid URL, skip
+                    }
+                }
             });
-            
-            return pages;
+
+            console.log(`  Found ${links.size} internal links`);
+
+            if (links.size === 0) {
+                console.log(`  ⚠️  No links found - indexing main page only`);
+                const content = this.extractTextContent(html);
+                const title = this.extractTitle(html, source.index_url);
+                const pageName = this.extractPageName(source.index_url);
+
+                pages.push({
+                    source_id: source.id,
+                    source_name: source.name,
+                    url: source.index_url,
+                    title: title,
+                    page_name: pageName,
+                    content: content.substring(0, 10000),
+                    indexed_at: new Date().toISOString(),
+                    is_local: false
+                });
+
+                return pages;
+            }
+
+            linkArray = Array.from(links).slice(0, 50);
         }
 
-        // Parallel crawling for faster indexing
-        const linkArray = Array.from(links).slice(0, 50);
-        const chunkSize = 5;
-        let indexed = 0;
+        console.log(`  📄 Indexing ${linkArray.length} pages sequentially at ~${RATE}ms/req...`);
+
         let successful = 0;
+        for (let i = 0; i < linkArray.length; i++) {
+            const link = linkArray[i];
+            const pageHtml = await this.fetchPage(link);
 
-        for (let i = 0; i < linkArray.length; i += chunkSize) {
-            const chunk = linkArray.slice(i, i + chunkSize);
-            const promises = chunk.map(async (link) => {
-                const pageHtml = await this.fetchPage(link);
-                if (pageHtml) {
-                    const content = this.extractTextContent(pageHtml);
-                    const title = this.extractTitle(pageHtml, link);
-                    const pageName = this.extractPageName(link);
-                    
-                    return {
-                        source_id: source.id,
-                        source_name: source.name,
-                        url: link,
-                        title: title,
-                        page_name: pageName,
-                        content: content.substring(0, 10000),
-                        indexed_at: new Date().toISOString(),
-                        is_local: false
-                    };
-                }
-                return null;
-            });
+            if (pageHtml) {
+                const content = this.extractTextContent(pageHtml);
+                const title = this.extractTitle(pageHtml, link);
+                const pageName = this.extractPageName(link);
 
-            const results = await Promise.all(promises);
-            const validResults = results.filter(p => p !== null);
-            pages.push(...validResults);
-            successful += validResults.length;
-            
-            indexed += chunk.length;
-            console.log(`  Indexerade ${indexed}/${linkArray.length} pages (${successful} successful)...`);
-            
-            await new Promise(resolve => setTimeout(resolve, RATE));
+                pages.push({
+                    source_id: source.id,
+                    source_name: source.name,
+                    url: link,
+                    title: title,
+                    page_name: pageName,
+                    content: content.substring(0, 10000),
+                    indexed_at: new Date().toISOString(),
+                    is_local: false
+                });
+                successful++;
+            }
+
+            console.log(`  [${i + 1}/${linkArray.length}] ${successful} successful...`);
+            await this.jitter();
         }
 
         console.log(`  ✅ Indexed total ${pages.length} pages from ${source.name}`);
@@ -497,41 +514,37 @@ class ContentIndexer {
             return pages;
         }
 
-        // Parallell crawling
-        const chunkSize = 5;
-        for (let i = 0; i < source.pages.length; i += chunkSize) {
-            const chunk = source.pages.slice(i, i + chunkSize);
-            const promises = chunk.map(async (page) => {
-                const url = `${source.base_url}/${page}`;
-                const html = await this.fetchPage(url);
-                
-                if (html) {
-                    const content = this.extractTextContent(html);
-                    const title = this.extractTitle(html, url);
-                    const pageName = page.replace(/-/g, ' ');
-                    
-                    return {
-                        source_id: source.id,
-                        source_name: source.name,
-                        url: url,
-                        title: title,
-                        page_name: pageName,
-                        content: content.substring(0, 10000),
-                        indexed_at: new Date().toISOString(),
-                        is_local: false
-                    };
-                }
-                return null;
-            });
+        console.log(`  📄 Indexing ${source.pages.length} pages sequentially at ~${RATE}ms/req...`);
 
-            const results = await Promise.all(promises);
-            pages.push(...results.filter(p => p !== null));
-            
-            console.log(`  Indexerade ${i + chunk.length}/${source.pages.length} pages...`);
-            await new Promise(resolve => setTimeout(resolve, RATE));
+        let successful = 0;
+        for (let i = 0; i < source.pages.length; i++) {
+            const page = source.pages[i];
+            const url = `${source.base_url}/${page}`;
+            const html = await this.fetchPage(url);
+
+            if (html) {
+                const content = this.extractTextContent(html);
+                const title = this.extractTitle(html, url);
+                const pageName = page.replace(/-/g, ' ');
+
+                pages.push({
+                    source_id: source.id,
+                    source_name: source.name,
+                    url: url,
+                    title: title,
+                    page_name: pageName,
+                    content: content.substring(0, 10000),
+                    indexed_at: new Date().toISOString(),
+                    is_local: false
+                });
+                successful++;
+            }
+
+            console.log(`  [${i + 1}/${source.pages.length}] ${successful} successful...`);
+            await this.jitter();
         }
 
-        console.log(`  ✅ Indexerade ${pages.length} pages from ${source.name}`);
+        console.log(`  ✅ Indexed ${pages.length} pages from ${source.name}`);
         return pages;
     }
 
@@ -545,76 +558,60 @@ class ContentIndexer {
         }
 
         console.log(`  Found ${source.urls.length} markdown-filer att indexera`);
+        console.log(`  📄 Indexing sequentially at ~${RATE}ms/req...`);
 
-        // Parallell crawling
-        const chunkSize = 5;
-        let indexed = 0;
         let successful = 0;
+        for (let i = 0; i < source.urls.length; i++) {
+            const url = source.urls[i];
+            const markdownContent = await this.fetchPage(url);
 
-        for (let i = 0; i < source.urls.length; i += chunkSize) {
-            const chunk = source.urls.slice(i, i + chunkSize);
-            const promises = chunk.map(async (url) => {
-                const markdownContent = await this.fetchPage(url);
-                
-                if (markdownContent) {
-                    // Extract title from first # heading in markdown
-                    const lines = markdownContent.split('\n');
-                    let title = null;
-                    for (const line of lines) {
-                        const match = line.match(/^#\s+(.+)/);
-                        if (match) {
-                            title = match[1].trim();
-                            break;
-                        }
+            if (markdownContent) {
+                const lines = markdownContent.split('\n');
+                let title = null;
+                for (const line of lines) {
+                    const match = line.match(/^#\s+(.+)/);
+                    if (match) {
+                        title = match[1].trim();
+                        break;
                     }
-                    
-                    // Fallback: use filename from URL
-                    if (!title) {
-                        const urlParts = url.split('/');
-                        title = urlParts[urlParts.length - 1]
-                            .replace(/\.md$/i, '')
-                            .replace(/[-_]/g, ' ');
-                    }
-                    
-                    // Extract page name from URL
-                    const urlObj = new URL(url);
-                    const pathParts = urlObj.pathname.split('/').filter(p => p);
-                    const pageName = pathParts[pathParts.length - 1]
+                }
+
+                if (!title) {
+                    const urlParts = url.split('/');
+                    title = urlParts[urlParts.length - 1]
                         .replace(/\.md$/i, '')
                         .replace(/[-_]/g, ' ');
-                    
-                    // Convert markdown content to lowercase for search
-                    const content = markdownContent
-                        .replace(/```[\s\S]*?```/g, ' ') // Remove code blocks
-                        .replace(/`[^`]+`/g, ' ') // Remove inline code
-                        .replace(/[#*_\[\]()]/g, ' ') // Remove markdown symbols
-                        .replace(/\s+/g, ' ')
-                        .trim()
-                        .toLowerCase();
-                    
-                    return {
-                        source_id: source.id,
-                        source_name: source.name,
-                        url: url,
-                        title: title,
-                        page_name: pageName,
-                        content: content.substring(0, 10000),
-                        indexed_at: new Date().toISOString(),
-                        is_local: false  // Markdown sources are online
-                    };
                 }
-                return null;
-            });
 
-            const results = await Promise.all(promises);
-            const validResults = results.filter(p => p !== null);
-            pages.push(...validResults);
-            successful += validResults.length;
-            
-            indexed += chunk.length;
-            console.log(`  Indexerade ${indexed}/${source.urls.length} filer (${successful} successful)...`);
-            
-            await new Promise(resolve => setTimeout(resolve, RATE));
+                const urlObj = new URL(url);
+                const pathParts = urlObj.pathname.split('/').filter(p => p);
+                const pageName = pathParts[pathParts.length - 1]
+                    .replace(/\.md$/i, '')
+                    .replace(/[-_]/g, ' ');
+
+                const content = markdownContent
+                    .replace(/```[\s\S]*?```/g, ' ')
+                    .replace(/`[^`]+`/g, ' ')
+                    .replace(/[#*_\[\]()]/g, ' ')
+                    .replace(/\s+/g, ' ')
+                    .trim()
+                    .toLowerCase();
+
+                pages.push({
+                    source_id: source.id,
+                    source_name: source.name,
+                    url: url,
+                    title: title,
+                    page_name: pageName,
+                    content: content.substring(0, 10000),
+                    indexed_at: new Date().toISOString(),
+                    is_local: false
+                });
+                successful++;
+            }
+
+            console.log(`  [${i + 1}/${source.urls.length}] ${successful} successful...`);
+            await this.jitter();
         }
 
         console.log(`  ✅ Indexed total ${pages.length} markdown-filer from ${source.name}`);
@@ -627,7 +624,6 @@ class ContentIndexer {
         const sources = await this.loadSources();
         const allPages = [];
 
-        // Index online sources
         console.log('🌐 ONLINE SOURCES:');
         for (const source of sources.online) {
             try {
@@ -649,7 +645,6 @@ class ContentIndexer {
             }
         }
 
-        // Index offline sources
         if (sources.offline.length > 0) {
             console.log('\n📁 OFFLINE SOURCES:');
             for (const source of sources.offline) {
@@ -676,10 +671,9 @@ class ContentIndexer {
             }))
         };
 
-        // Ensure all pages have is_local flag (fix for markdown sources)
         this.index.pages.forEach(page => {
             if (page.is_local === undefined) {
-                page.is_local = false; // Default to online if not set
+                page.is_local = false;
             }
         });
 
@@ -696,7 +690,6 @@ class ContentIndexer {
         // Backup before overwriting
         await fs.copyFile(this.indexPath, this.indexPath + '.backup').catch(() => {});
 
-        // Prepare index for saving
         const indexData = JSON.stringify(this.index, null, 2);
         const sizeKB = (indexData.length / 1024).toFixed(2);
         
@@ -708,7 +701,6 @@ class ContentIndexer {
             'utf-8'
         );
         
-        // Optional: Save metadata about index size for future optimization
         const metadataPath = this.indexPath.replace('.json', '.meta.json');
         await fs.writeFile(
             metadataPath,
@@ -726,7 +718,7 @@ class ContentIndexer {
     search(query, options = {}) {
         const searchTerm = query.toLowerCase().trim();
         const results = [];
-        const fuzzyMatch = options.fuzzy !== false; // Default true
+        const fuzzyMatch = options.fuzzy !== false;
 
         for (const page of this.index.pages) {
             let score = 0;
@@ -792,13 +784,11 @@ class ContentIndexer {
             }
         }
 
-        // Sort after relevance
         results.sort((a, b) => b.relevance_score - a.relevance_score);
         
         return results;
     }
 
-    // Easy fuzzy search (Levenshtein-similar)
     fuzzySearch(pattern, text) {
         if (pattern.length === 0) return 0;
         if (text.includes(pattern)) return 1;
@@ -825,14 +815,12 @@ class ContentIndexer {
     removeImages(html) {
         const $ = cheerio.load(html);
         
-        // Remove all images to save space
         $('img').remove();
         $('picture').remove();
         $('svg').remove();
         $('video').remove();
         $('audio').remove();
         
-        // Remove lazy loading attributes
         $('[data-src]').removeAttr('data-src');
         $('[srcset]').removeAttr('srcset');
         
@@ -848,7 +836,7 @@ class ContentIndexer {
                 const stats = await fs.stat(path.join(dir, file));
                 totalSize += stats.size;
             }
-            return (totalSize / 1024 / 1024).toFixed(2); // MB
+            return (totalSize / 1024 / 1024).toFixed(2);
         } catch (error) {
             return '0.00';
         }
@@ -874,23 +862,19 @@ class ContentIndexer {
             const page = pages[i];
             
             try {
-                // Fetch full HTML
                 const html = await this.fetchPage(page.url);
                 if (!html) {
                     failed++;
                     continue;
                 }
                 
-                // Remove images to save space
                 const cleanHtml = this.removeImages(html);
                 
-                // Generate hash for filename
                 const hash = this.hashUrl(page.url);
                 const cachePath = path.join(cacheDir, `${hash}.html`);
                 
                 await fs.writeFile(cachePath, cleanHtml, 'utf-8');
                 
-                // Store cache metadata in page
                 page.cache_path = cachePath;
                 page.cache_hash = hash;
                 page.cached_at = new Date().toISOString();
@@ -898,13 +882,12 @@ class ContentIndexer {
                 
                 cached++;
                 
-                // Progress indicator
                 if ((i + 1) % 10 === 0 || i === pages.length - 1) {
                     console.log(`    Cached ${cached}/${pages.length} pages...`);
                 }
                 
-                // Small delay to avoid hammering server
-                await new Promise(resolve => setTimeout(resolve, RATE));
+                // Jitter delay to avoid hammering server
+                await this.jitter();
                 
             } catch (error) {
                 console.error(`    ❌ Cache failed for: ${page.title}`);
@@ -917,7 +900,6 @@ class ContentIndexer {
         console.log(`    ✅ Cached ${cached}/${pages.length} pages (${failed} failed)`);
         console.log(`    💾 Total size: ${sizeInMB} MB`);
         
-        // Save metadata
         await this.saveCacheMetadata(source.id, {
             source_name: source.name,
             source_id: source.id,
@@ -974,7 +956,6 @@ if (require.main === module) {
         if (command === 'build' || command === 'rebuild') {
             await indexer.buildIndex();
         } else if (command === 'cache') {
-            // NEW: Cache offline sources
             console.log('\n💾 Starting offline caching...\n');
             const sources = await indexer.loadSources();
             const offlineSources = sources.online.filter(s => s.cache_offline === true);
@@ -1009,7 +990,6 @@ if (require.main === module) {
             for (const source of offlineSources) {
                 console.log(`\n📚 Processing ${source.name}...`);
                 
-                // Index the source
                 let pages = [];
                 if (source.type === 'gitbook') {
                     pages = await indexer.indexGitBookSource(source);
@@ -1020,27 +1000,22 @@ if (require.main === module) {
                 }
                 
                 if (pages.length > 0) {
-                    // Cache the pages
                     const result = await indexer.cacheSourcePages(source, pages);
                     totalCached += result.cached;
                     totalSize += parseFloat(result.size_mb);
                     
-                    // Remove old pages from this source (if re-caching)
                     indexer.index.pages = indexer.index.pages.filter(p => p.source_id !== source.id);
-        
-                    // Add newly cached pages to index
                     indexer.index.pages.push(...pages);
                 }
             }
 
-            // Update sources metadata (so UI can display cached sources)
             indexer.index.sources = offlineSources.map(s => ({
                 id: s.id,
                 name: s.name,
                 type: s.type,
                 description: s.description || '',
                 page_count: indexer.index.pages.filter(p => p.source_id === s.id).length,
-                is_local: false  // Cached sources are online sources
+                is_local: false
             }));
             
             indexer.index.last_updated = new Date().toISOString();
@@ -1052,7 +1027,6 @@ if (require.main === module) {
             console.log(`   Total size: ${totalSize.toFixed(2)} MB`);
             
         } else if (command === 'cache-status') {
-            // NEW: Show cache status
             console.log('\n📊 Offline Cache Status:\n');
             const status = await indexer.getCacheStatus();
             
