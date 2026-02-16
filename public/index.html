@@ -839,6 +839,10 @@
     <div class="container">
         <div class="header">
             <h1>📖 PKBI</h1>
+            <button class="theme-toggle" onclick="toggleTheme()" id="themeToggle">
+                <span id="themeIcon">☀️</span>
+                <span class="theme-toggle-text" id="themeText">Light</span>
+            </button>
         </div>
 
         <!-- Search -->
@@ -1017,6 +1021,7 @@
         const resultsCount = document.getElementById('resultsCount');
         const searchStats = document.getElementById('searchStats');
         const collapseArrow = document.getElementById('collapseArrow');
+        const savedTheme = localStorage.getItem('theme') || 'dark';
 
         let searchTimeout;
         let sourcesCollapsed = false;
@@ -1030,6 +1035,27 @@
         let disabledSources = new Set(
             JSON.parse(localStorage.getItem('disabledSources') || '[]')
         );
+
+        applyTheme(savedTheme);
+
+        function applyTheme(theme) {
+            if (theme === 'light') {
+                document.documentElement.setAttribute('data-theme', 'light');
+                document.getElementById('themeIcon').textContent = '🌙';
+                document.getElementById('themeText').textContent = 'Dark';
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+                document.getElementById('themeIcon').textContent = '☀️';
+                document.getElementById('themeText').textContent = 'Light';
+            }
+        }
+
+        function toggleTheme() {
+            const current = localStorage.getItem('theme') || 'dark';
+            const next = current === 'dark' ? 'light' : 'dark';
+            localStorage.setItem('theme', next);
+            applyTheme(next);
+        }
 
         // Load saved fuzzy preference
         const savedFuzzyMode = localStorage.getItem('fuzzyMode');
