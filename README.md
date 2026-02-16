@@ -7,6 +7,7 @@ Feel free to use for your own needs, for other type of information other than pe
 ## ✨ Features
 
 - Fast indexing and search
+- Relatively "nice" indexeing = 2 requests per second. Can be changed to lower.
 - Smart relevance-based ranking
 - Supports GitBook, Docusaurus, web docs, and local markdown
 - Source overview on the homepage
