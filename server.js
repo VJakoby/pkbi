@@ -11,64 +11,59 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
-// Initiate indexer
+// Initiera indexer
 const indexer = new ContentIndexer();
 let indexReady = false;
 
-// Load index at start
-(async () => {
+// Ladda index och starta sedan servern
+async function startServer() {
     try {
         await indexer.initialize();
         const info = indexer.getIndexInfo();
-        
+
         if (info.total_pages > 0) {
-            console.log(`\n✅ Index loaded with ${info.total_pages} sidor`);
-            console.log(`📅 Last updated: ${info.last_updated || 'Aldrig'}`);
+            indexReady = true;
+            console.log(`\n✅ Index loaded with ${info.total_pages} pages`);
+            console.log(`📅 Last updated: ${info.last_updated || 'Never'}`);
             console.log(`📚 Sources:`);
             info.sources.forEach(s => {
-                console.log(`   - ${s.name}: ${s.page_count} sidor`);
+                console.log(`   - ${s.name}: ${s.page_count} pages`);
             });
             console.log();
-            indexReady = true;
         } else {
-            console.log('\n⚠️  Index is empty.\n');
+            console.log('\n⚠️  Index is empty. Run "npm run index" to build the index.\n');
         }
     } catch (error) {
-        console.error('❌ Error at loading av index:', error.message);
+        console.error('❌ Error loading index:', error.message);
     }
-})();
 
-// API: Get status and sources
+    // Start server after index is loaded
+    app.listen(PORT, () => {
+        console.log(`✅ Pentest Knowledge Base Indexer server started`);
+        console.log(`🌐 Server is being run at:  http://localhost:${PORT}`);
+        if (!indexReady) {
+            console.log('⚠️  OBS: Index not ready!');
+            console.log('   Run: npm run index\n');
+        }
+    });
+}
+
+startServer();
+
+// API: Hämta status och källor
 app.get('/api/status', (req, res) => {
     const info = indexer.getIndexInfo();
     res.json({
         ready: indexReady,
-        version: '3.0',
+        version: '1.0',
         ...info
     });
 });
 
-// API: Search
+// API: Sök
 app.post('/api/search', (req, res) => {
-    const { query, fuzzyMode, fuzzy = true, fuzzy_prefer = false } = req.body;
-    
-    // Convert fuzzyMode to fuzzy and fuzzy_prefer flags
-    let fuzzyEnabled = fuzzy;
-    let fuzzyPrefer = fuzzy_prefer;
-    
-    if (fuzzyMode) {
-        if (fuzzyMode === 'off') {
-            fuzzyEnabled = false;
-            fuzzyPrefer = false;
-        } else if (fuzzyMode === 'normal') {
-            fuzzyEnabled = true;
-            fuzzyPrefer = false;
-        } else if (fuzzyMode === 'prefer') {
-            fuzzyEnabled = true;
-            fuzzyPrefer = true;
-        }
-    }
-    
+    const { query, fuzzy = true, fuzzy_prefer = false } = req.body;
+
     if (!indexReady) {
         return res.status(503).json({
             error: 'Index not ready. Run "npm run index" först.',
@@ -76,17 +71,17 @@ app.post('/api/search', (req, res) => {
             count: 0
         });
     }
-    
+
     if (!query || query.trim() === '') {
         return res.json({ results: [], count: 0, query: '' });
     }
 
     try {
         const startTime = Date.now();
-        const results = indexer.search(query, { fuzzy: fuzzyEnabled, fuzzy_prefer: fuzzyPrefer });
+        const results = indexer.search(query, { fuzzy, fuzzy_prefer });
         const searchTime = Date.now() - startTime;
-        
-        // Limit to top 50 results for better performance
+
+        // Begränsa till top 50 resultat för bättre prestanda
         const topResults = results.slice(0, 50).map(r => ({
             source_name: r.source_name,
             source_id: r.source_id,
@@ -97,9 +92,7 @@ app.post('/api/search', (req, res) => {
             relevance_score: r.relevance_score,
             match_type: r.match_type,
             snippet: r.snippet,  // Now includes {text, highlightStart, highlightLength}
-            is_local: r.is_local,
-            is_cached: r.is_cached,
-            cache_hash: r.cache_hash
+            is_local: r.is_local
         }));
 
         res.json({
@@ -111,7 +104,7 @@ app.post('/api/search', (req, res) => {
             total_searched: indexer.index.pages.length
         });
     } catch (error) {
-        console.error('Search error:', error);
+        console.error('Sökfel:', error);
         res.status(500).json({
             error: 'Fel vid sökning',
             results: [],
@@ -120,7 +113,7 @@ app.post('/api/search', (req, res) => {
     }
 });
 
-// API: Get all sources
+// API: Hämta alla källor
 app.get('/api/sources', (req, res) => {
     const info = indexer.getIndexInfo();
     res.json({
@@ -129,26 +122,26 @@ app.get('/api/sources', (req, res) => {
     });
 });
 
-// API: Preview local markdown-file
+// API: Preview lokal markdown-fil
 app.get('/api/preview', async (req, res) => {
     const { file } = req.query;
-    
+
     if (!file) {
         return res.status(400).json({ error: 'No file specified' });
     }
-    
+
     try {
         // Security: Only allow files that are in the index
         const page = indexer.index.pages.find(p => p.file_path === file);
         if (!page) {
             return res.status(404).json({ error: 'File not found in index' });
         }
-        
+
         const content = await fs.readFile(file, 'utf-8');
-        
+
         // Simple markdown to HTML conversion (basic)
         const html = simpleMarkdownToHTML(content);
-        
+
         res.json({
             title: page.title,
             page_name: page.page_name,
@@ -165,65 +158,64 @@ app.get('/api/preview', async (req, res) => {
 // Simple markdown to HTML converter (basic but works)
 function simpleMarkdownToHTML(markdown) {
     let html = markdown;
-    
+
     // Headers
-    html = html.replace(/^#### (.*$)/gim, '<h4>$1</h4>');
     html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
     html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
     html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
-    
+
     // Bold
     html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
     html = html.replace(/__(.*?)__/g, '<strong>$1</strong>');
-    
+
     // Italic
     html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
     html = html.replace(/_(.*?)_/g, '<em>$1</em>');
-    
+
     // Code blocks
     html = html.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
-    
+
     // Inline code
     html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
-    
+
     // Links
     html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
-    
+
     // Line breaks
     html = html.replace(/\n\n/g, '</p><p>');
     html = html.replace(/\n/g, '<br>');
-    
+
     // Wrap in paragraph
     html = '<p>' + html + '</p>';
-    
+
     // Clean up
     html = html.replace(/<p><\/p>/g, '');
     html = html.replace(/<p><h/g, '<h');
     html = html.replace(/<\/h([1-6])><\/p>/g, '</h$1>');
     html = html.replace(/<p><pre>/g, '<pre>');
     html = html.replace(/<\/pre><\/p>/g, '</pre>');
-    
+
     return html;
 }
 
 // API: Incremental update of local file
 app.post('/api/update-file', async (req, res) => {
     const { file } = req.body;
-    
+
     if (!file) {
         return res.status(400).json({ error: 'No file specified' });
     }
-    
+
     try {
         const success = await indexer.updateLocalFile(file);
         if (success) {
-            res.json({ 
-                success: true, 
+            res.json({
+                success: true,
                 message: 'File updated in index',
                 total_pages: indexer.index.pages.length
             });
         } else {
-            res.status(400).json({ 
+            res.status(400).json({
                 success: false,
                 error: 'Could not update file'
             });
@@ -237,21 +229,21 @@ app.post('/api/update-file', async (req, res) => {
 // API: Remove file from index
 app.post('/api/remove-file', async (req, res) => {
     const { file } = req.body;
-    
+
     if (!file) {
         return res.status(400).json({ error: 'No file specified' });
     }
-    
+
     try {
         const success = await indexer.removeLocalFile(file);
         if (success) {
-            res.json({ 
-                success: true, 
+            res.json({
+                success: true,
                 message: 'File removed from index',
                 total_pages: indexer.index.pages.length
             });
         } else {
-            res.status(404).json({ 
+            res.status(404).json({
                 success: false,
                 error: 'File not found in index'
             });
@@ -265,18 +257,18 @@ app.post('/api/remove-file', async (req, res) => {
 // API: Get cached page (for offline preview)
 app.get('/api/cached-page', async (req, res) => {
     const { source_id, url } = req.query;
-    
+
     if (!source_id || !url) {
         return res.status(400).json({ error: 'Missing parameters' });
     }
-    
+
     try {
         const crypto = require('crypto');
         const hash = crypto.createHash('md5').update(url).digest('hex');
         const cachePath = path.join(__dirname, 'data', 'cache', 'online', source_id, `${hash}.html`);
-        
+
         const html = await fs.readFile(cachePath, 'utf-8');
-        
+
         res.json({
             html: html,
             cached: true,
@@ -284,9 +276,9 @@ app.get('/api/cached-page', async (req, res) => {
             url: url
         });
     } catch (error) {
-        res.status(404).json({ 
+        res.status(404).json({
             error: 'Page not cached',
-            message: 'Run: npm run cache to cache offline pages' 
+            message: 'Run: npm run cache to cache offline pages'
         });
     }
 });
@@ -302,26 +294,26 @@ app.get('/api/cache-status', async (req, res) => {
     }
 });
 
-// API: Rebuild index (async)
+// API: Bygg om index (async)
 app.post('/api/rebuild-index', async (req, res) => {
     if (!indexReady) {
         return res.status(503).json({
-            error: 'Indexing already running or can not be started'
+            error: 'Indexering pågår redan eller kan inte startas'
         });
     }
 
     try {
-        console.log('🔄 Starting rebuilding of index...');
-        res.json({ message: 'Indexing started in background' });
-        
+        console.log('🔄 Startar ombyggnad av index...');
+        res.json({ message: 'Indexering startad i bakgrunden' });
+
         indexReady = false;
         await indexer.buildIndex();
         indexReady = true;
-        
-        console.log('✅ Index rebuilt!');
+
+        console.log('✅ Index ombyggt!');
     } catch (error) {
-        console.error('❌ Error at rebuilding:', error);
-        indexReady = true; // Restore status
+        console.error('❌ Fel vid ombyggnad:', error);
+        indexReady = true; // Återställ status
     }
 });
 
@@ -334,19 +326,8 @@ app.get('/health', (req, res) => {
     });
 });
 
-app.listen(PORT, () => {
-    console.log(`\n✅ Pentest Knowledge Base Indexer server started`);
-    console.log(`🌐 Server is being run at:  http://localhost:${PORT}`);
-    console.log(`📂 Open http://localhost:${PORT} in your web-browser\n`);
-    
-    if (!indexReady) {
-        console.log('⚠️  OBS: Index is not ready!');
-        console.log('   Run: npm run index\n');
-    }
-});
-
 // Graceful shutdown
 process.on('SIGTERM', () => {
-    console.log('\n🛑 Shutting down the server...');
+    console.log('\n🛑 Shutting down server...');
     process.exit(0);
 });

@@ -692,7 +692,7 @@ class ContentIndexer {
                 } else if (source.type === 'markdown') {
                     pages = await this.indexMarkdownSource(source);
                 } else {
-                    console.log(`⚠️  Okänd källtyp: ${source.type} för ${source.name}`);
+                    console.log(`⚠️  Unknown sourcetype: ${source.type} för ${source.name}`);
                 }
 
                 allPages.push(...pages);
