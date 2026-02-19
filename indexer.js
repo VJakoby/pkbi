@@ -1137,7 +1137,7 @@ if (require.main === module) {
             });
             console.log();
         } else {
-            console.log('\n📚 Pentest Knowledge Base Indexer\n');
+            console.log('\n📚 Pentesting Knowledge Base Indexer\n');
             console.log('Usage:');
             console.log('  node indexer.js build              - Rebuild entire index');
             console.log('  node indexer.js cache              - Cache offline sources');

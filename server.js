@@ -11,11 +11,11 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
-// Initiera indexer
+// Initiate indexer
 const indexer = new ContentIndexer();
 let indexReady = false;
 
-// Ladda index och starta sedan servern
+// Load index and start server
 async function startServer() {
     try {
         await indexer.initialize();
@@ -39,7 +39,7 @@ async function startServer() {
 
     // Start server after index is loaded
     app.listen(PORT, () => {
-        console.log(`✅ Pentest Knowledge Base Indexer server started`);
+        console.log(`✅ Pentesting Knowledge Base Indexer server started`);
         console.log(`🌐 Server is being run at:  http://localhost:${PORT}`);
         if (!indexReady) {
             console.log('⚠️  OBS: Index not ready!');
@@ -60,7 +60,7 @@ app.get('/api/status', (req, res) => {
     });
 });
 
-// API: Sök
+// API: Search
 app.post('/api/search', (req, res) => {
     const { query, fuzzy = true, fuzzy_prefer = false } = req.body;
 
@@ -81,7 +81,7 @@ app.post('/api/search', (req, res) => {
         const results = indexer.search(query, { fuzzy, fuzzy_prefer });
         const searchTime = Date.now() - startTime;
 
-        // Begränsa till top 50 resultat för bättre prestanda
+        // Limit to top 50 results for better performance
         const topResults = results.slice(0, 50).map(r => ({
             source_name: r.source_name,
             source_id: r.source_id,
@@ -113,7 +113,7 @@ app.post('/api/search', (req, res) => {
     }
 });
 
-// API: Hämta alla källor
+// API: Get all sources
 app.get('/api/sources', (req, res) => {
     const info = indexer.getIndexInfo();
     res.json({
@@ -122,7 +122,7 @@ app.get('/api/sources', (req, res) => {
     });
 });
 
-// API: Preview lokal markdown-fil
+// API: Preview local markdown file
 app.get('/api/preview', async (req, res) => {
     const { file } = req.query;
 
@@ -160,6 +160,7 @@ function simpleMarkdownToHTML(markdown) {
     let html = markdown;
 
     // Headers
+    html = html.replace(/^#### (.*$)/gim, '<h4>$1</h4>');
     html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
     html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
     html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
@@ -294,26 +295,26 @@ app.get('/api/cache-status', async (req, res) => {
     }
 });
 
-// API: Bygg om index (async)
+// API: Rebuild index (async)
 app.post('/api/rebuild-index', async (req, res) => {
     if (!indexReady) {
         return res.status(503).json({
-            error: 'Indexering pågår redan eller kan inte startas'
+            error: 'Index rebuild in progress or cannot start'
         });
     }
 
     try {
-        console.log('🔄 Startar ombyggnad av index...');
-        res.json({ message: 'Indexering startad i bakgrunden' });
+        console.log('🔄 Rebuilding index...');
+        res.json({ message: 'Index rebuild started in background' });
 
         indexReady = false;
         await indexer.buildIndex();
         indexReady = true;
 
-        console.log('✅ Index ombyggt!');
+        console.log('✅ Index rebuilt!');
     } catch (error) {
-        console.error('❌ Fel vid ombyggnad:', error);
-        indexReady = true; // Återställ status
+        console.error('❌ Error rebuilding index:', error);
+        indexReady = true; // Restore status
     }
 });
 
