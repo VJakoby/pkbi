@@ -1,4 +1,4 @@
-# 🔍 Pentest KB Indexer (PKBI)
+# 🔍 Pentesting Knowledge Base Indexer (PKBI)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 

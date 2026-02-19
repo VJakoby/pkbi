@@ -1,5 +1,5 @@
 {
-  "name": "pentest-knowledge-base-indexer",
+  "name": "pentesting-knowledge-base-indexer",
   "version": "1.0",
   "description": "Optimized indexed search for pentest knowledge base with fuzzy search and advanced scoring",
   "main": "server.js",
@@ -19,7 +19,13 @@
     "cors": "^2.8.5",
     "cheerio": "^1.0.0-rc.12"
   },
-  "keywords": ["pentest", "security", "search", "indexer","kb"],
+  "keywords": [
+    "pentest",
+    "security",
+    "search",
+    "indexer",
+    "kb"
+  ],
   "author": "VJakoby",
   "license": "MIT"
 }
