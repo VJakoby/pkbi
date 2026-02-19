@@ -1,10 +1,13 @@
-# 🔍 Pentest KB Indexer (PKBI)
+<h1 align="center">🔍 Pentesting KB Indexer (PKBI)</h1>
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-A fast local tool for searching indexed pages of pentesting documentation. 
+A fast local tool for searching indexed pages of pentesting documentation, both online and local.
 
-Use for personal usage only.
+## Why?
+Online there are many high-quality sites and public pages covering documentation and methodology. 
+
+Instead of opening multiple browser tabs for different resources and separate applications like Obsidian for local notes, the idea developed to consolidate everything into one unified search interface.
 
 ## ✨ Features
 
