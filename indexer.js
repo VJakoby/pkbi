@@ -3,7 +3,7 @@ const fs = require('fs').promises;
 const path = require('path');
 const cheerio = require('cheerio');
 const crypto = require('crypto');
-const RATE = 500;
+const RATE = 200;
 /* Delay in ms between the requests. Keep it at either of these levels to avoid being blocked.
 * 1000 --> 1 req/sec
 * 500 --> 2 req/sec
@@ -100,67 +100,61 @@ class ContentIndexer {
     }
 
     async indexLocalSource(source) {
-        console.log(`\n📁 Indexing ${source.name}...`);
+        console.log(`\n📁 Parallel Indexing ${source.name}...`);
         const pages = [];
-
         const resolvedPath = this.resolvePath(source.path);
-        console.log(`  Path: ${resolvedPath}`);
 
         try {
             await fs.access(resolvedPath);
         } catch (error) {
             console.log(`  ⚠️  Directory does not exist: ${resolvedPath}`);
-            console.log(`  💡 Create the directory or update path in sources.json`);
             return pages;
         }
 
         const extensions = source.file_extensions || ['.md'];
         const files = await this.findMarkdownFiles(resolvedPath, extensions);
-
-        console.log(`  Found ${files.length} files`);
-
-        if (files.length === 0) {
-            console.log(`  ℹ️  No files to index`);
-            return pages;
-        }
+        console.log(`  Found ${files.length} files. Processing in parallel...`);
 
         let newFiles = 0;
         let updatedFiles = 0;
         let unchangedFiles = 0;
 
-        for (const filePath of files) {
-            try {
-                const stats = await fs.stat(filePath);
-                const lastModified = stats.mtime.toISOString();
+        // Process in batches of 50 to stay within OS limits but maintain high speed
+        const BATCH_SIZE = 50;
+        for (let i = 0; i < files.length; i += BATCH_SIZE) {
+            const batch = files.slice(i, i + BATCH_SIZE);
 
-                const existingPage = this.index.pages.find(p => p.file_path === filePath);
+            const results = await Promise.all(batch.map(async (filePath) => {
+                try {
+                    const stats = await fs.stat(filePath);
+                    const lastModified = stats.mtime.toISOString();
 
-                if (existingPage && existingPage.file_modified === lastModified) {
-                    pages.push(existingPage);
-                    unchangedFiles++;
-                    continue;
-                }
+                    const existingPage = this.index.pages.find(p => p.file_path === filePath);
 
-                const page = await this.indexSingleLocalFile(filePath, source, resolvedPath);
-                if (page) {
-                    page.file_modified = lastModified;
-                    pages.push(page);
-
-                    if (existingPage) {
-                        updatedFiles++;
-                    } else {
-                        newFiles++;
+                    if (existingPage && existingPage.file_modified === lastModified) {
+                        unchangedFiles++;
+                        return existingPage;
                     }
+
+                    const page = await this.indexSingleLocalFile(filePath, source, resolvedPath);
+                    if (page) {
+                        page.file_modified = lastModified;
+                        existingPage ? updatedFiles++ : newFiles++;
+                        return page;
+                    }
+                } catch (error) {
+                    console.error(`  ❌ Error processing ${filePath}:`, error.message);
                 }
-            } catch (error) {
-                console.error(`  ❌ Error processing ${filePath}:`, error.message);
-            }
+                return null;
+            }));
+
+            pages.push(...results.filter(p => p !== null));
         }
 
         console.log(`  ✅ Indexed ${pages.length} files from ${source.name}`);
-        if (newFiles > 0) console.log(`     🆕 ${newFiles} new files`);
-        if (updatedFiles > 0) console.log(`     🔄 ${updatedFiles} updated files`);
-        if (unchangedFiles > 0) console.log(`     ⏭️  ${unchangedFiles} unchanged files`);
+        if (newFiles > 0) console.log(`      🆕 ${newFiles} new files`);
+        if (updatedFiles > 0) console.log(`      🔄 ${updatedFiles} updated files`);
+        if (unchangedFiles > 0) console.log(`      ⏭️  ${unchangedFiles} unchanged files`);
 
         return pages;
     }
