@@ -5,9 +5,9 @@
 A fast local tool for searching indexed pages of pentesting documentation, both online and local.
 
 ## Why?
-Online there are many high-quality sites and public pages covering documentation and methodology. 
+Technical documentation can be fragmented between Remote Public Docs (Web) and Local Documentation (Markdown). 
 
-Instead of opening multiple browser tabs for different resources and separate applications like Obsidian for local notes, the idea developed to consolidate everything into one unified search interface.
+This project eliminates the overhead of switching between browser tabs and local editors by providing a Unified Search Interface.
 
 ## ✨ Features
 
